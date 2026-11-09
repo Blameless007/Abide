@@ -54,4 +54,4 @@ $("addPrayer").onclick=()=>openPrayerModal();$("prayerForm").onsubmit=e=>{e.prev
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);$("prayerModal").addEventListener("click",e=>{if(e.target===$("prayerModal"))$("prayerModal").hidden=true});
 function downloadBackup(){const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),...data},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="abide-backup-"+dateKey()+".json";a.click();URL.revokeObjectURL(url);toast("Your backup is ready.")}$("downloadBackup").onclick=downloadBackup;$("exportData").onclick=downloadBackup;
 $("clearData").onclick=()=>{if(confirm("This permanently clears your prayer schedule, check-ins, and journal from this browser. Download a backup first if you want to keep them.")){localStorage.removeItem(KEY);data=structuredClone(defaults);renderSettings();renderPrayerList();renderJournals();renderHistory();toast("Abide has been reset.")}};
-init();
+init();Restore original app.js
