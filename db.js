@@ -90,6 +90,10 @@ async function migrateLegacyData() {
         }
     const oldData = JSON.parse(raw || "{}");
 
+    if (!oldData || typeof oldData !== "object" || Array.isArray(oldData)) {
+  throw new Error("Legacy data format is invalid.");
+}
+    
     const schedule = oldData.schedule || [];
     const checkins = oldData.checkins || [];
     const journals = oldData.journals || [];
