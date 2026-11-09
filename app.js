@@ -35,5 +35,21 @@ function openPrayerModal(id=null){editingPrayerId=id;const p=data.schedule.find(
 $("addPrayer").onclick=()=>openPrayerModal();$("prayerForm").onsubmit=e=>{e.preventDefault();const name=$("prayerName").value.trim(),time=$("prayerTime").value;if(!name||!time)return;if(editingPrayerId){const p=data.schedule.find(x=>x.id===editingPrayerId);if(p){p.name=name;p.time=time}}else data.schedule.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),name,time});saveData();$("prayerModal").hidden=true;renderSettings();renderPrayerList();toast("Your prayer rhythm has been updated.")};
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);$("prayerModal").addEventListener("click",e=>{if(e.target===$("prayerModal"))$("prayerModal").hidden=true});
 function downloadBackup(){const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),...data},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="abide-backup-"+dateKey()+".json";a.click();URL.revokeObjectURL(url);toast("Your backup is ready.")}$("downloadBackup").onclick=downloadBackup;$("exportData").onclick=downloadBackup;
+$("testMigration").onclick = async () => {
+  try {
+    const result = await window.AbideDB.migrateLegacyData();
+
+    if (result.alreadyMigrated) {
+  toast("Migration was already completed.");
+} else if (result.noLegacyData) {
+  toast("No previous data found.");
+} else {
+  toast(`Copied ${result.schedules} schedules, ${result.checkins} check-ins and ${result.journals} journal entries.`);
+}
+  } catch (error) {
+    console.error(error);
+    toast("Migration failed. Your original data is still safe.");
+  }
+};
 $("clearData").onclick=()=>{if(confirm("This permanently clears your prayer schedule, check-ins, and journal from this browser. Download a backup first if you want to keep them.")){localStorage.removeItem(KEY);data=structuredClone(defaults);renderSettings();renderPrayerList();renderJournals();renderHistory();toast("Abide has been reset.")}};
 init();
