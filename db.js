@@ -63,3 +63,105 @@ window.AbideDB = {
   version: DB_VERSION,
   stores: [...STORES]
 };
+
+// Abide 2.0 — Safe legacy data migration
+
+async function migrateLegacyData() {
+  const db = await openAbideDB();
+  const markerId = "legacy-v1-migration";
+
+  try {
+    const check = db.transaction("appMeta", "readonly");
+    const marker = await new Promise((resolve, reject) => {
+      const request = check.objectStore("appMeta").get(markerId);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    if (marker) {
+      db.close();
+      return { success: true, alreadyMigrated: true };
+    }
+
+    const raw = localStorage.getItem("abide.v1.data");
+    const oldData = JSON.parse(raw || "{}");
+
+    const schedule = oldData.schedule || [];
+    const checkins = oldData.checkins || [];
+    const journals = oldData.journals || [];
+
+    if (
+      !Array.isArray(schedule) ||
+      !Array.isArray(checkins) ||
+      !Array.isArray(journals)
+    ) {
+      throw new Error("Legacy data format is invalid.");
+    }
+
+    const tx = db.transaction(
+      ["appMeta", "prayerSchedules", "legacyCheckins", "journals", "migrationArchive"],
+      "readwrite"
+    );
+
+    tx.objectStore("migrationArchive").put({
+      id: markerId,
+      source: "abide.v1.data",
+      originalData: raw,
+      archivedAt: new Date().toISOString()
+    });
+
+    schedule.forEach(item => {
+      if (item && item.id) {
+        tx.objectStore("prayerSchedules").put(item);
+      }
+    });
+
+    checkins.forEach((item, index) => {
+      if (item) {
+        tx.objectStore("legacyCheckins").put({
+          ...item,
+          id: `legacy-${index}-${item.day}-${item.id}`,
+          prayerId: item.id
+        });
+      }
+    });
+
+    journals.forEach(item => {
+      if (item && item.id) {
+        tx.objectStore("journals").put(item);
+      }
+    });
+
+    tx.objectStore("appMeta").put({
+      id: markerId,
+      status: "completed",
+      migratedAt: new Date().toISOString(),
+      counts: {
+        schedules: schedule.length,
+        checkins: checkins.length,
+        journals: journals.length
+      }
+    });
+
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+
+    db.close();
+
+    return {
+      success: true,
+      schedules: schedule.length,
+      checkins: checkins.length,
+      journals: journals.length
+    };
+
+  } catch (error) {
+    db.close();
+    throw error;
+  }
+}
+
+window.AbideDB.migrateLegacyData = migrateLegacyData;
