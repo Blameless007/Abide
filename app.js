@@ -88,13 +88,19 @@ $("testMigration").onclick = async () => {
 };
 $("clearData").onclick=()=>{
   if(confirm("This permanently clears your prayer schedule, check-ins, and journal from this browser. Download a backup first if you want to keep them.")){
-    data=structuredClone(defaults);
+    data = {
+      ...structuredClone(defaults),
+      schedule: [],
+      checkins: [],
+      journals: []
+    };
+
     saveData();
     renderSettings();
     renderPrayerList();
     renderJournals();
     renderHistory();
-    toast("Abide has been reset.");
+    toast("Your personal prayer data has been cleared.");
   }
 };
 init();
