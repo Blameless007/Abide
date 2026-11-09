@@ -114,9 +114,13 @@ async function migrateLegacyData() {
       archivedAt: new Date().toISOString()
     });
 
+    let migratedSchedules = 0;
+let migratedCheckins = 0;
+let migratedJournals = 0;
     schedule.forEach(item => {
       if (item && item.id) {
         tx.objectStore("prayerSchedules").put(item);
+      migratedSchedules++;
       }
     });
 
@@ -127,12 +131,14 @@ async function migrateLegacyData() {
           id: `legacy-${index}-${item.day}-${item.id}`,
           prayerId: item.id
         });
+        migratedCheckins++;
       }
     });
 
     journals.forEach(item => {
       if (item && item.id) {
         tx.objectStore("journals").put(item);
+      migratedJournals++;
       }
     });
 
@@ -141,10 +147,10 @@ async function migrateLegacyData() {
       status: "completed",
       migratedAt: new Date().toISOString(),
       counts: {
-        schedules: schedule.length,
-        checkins: checkins.length,
-        journals: journals.length
-      }
+  schedules: migratedSchedules,
+  checkins: migratedCheckins,
+  journals: migratedJournals
+}
     });
 
     await new Promise((resolve, reject) => {
@@ -156,11 +162,11 @@ async function migrateLegacyData() {
     db.close();
 
     return {
-      success: true,
-      schedules: schedule.length,
-      checkins: checkins.length,
-      journals: journals.length
-    };
+  success: true,
+  schedules: migratedSchedules,
+  checkins: migratedCheckins,
+  journals: migratedJournals
+};
 
   } catch (error) {
     db.close();
