@@ -84,6 +84,10 @@ async function migrateLegacyData() {
     }
 
     const raw = localStorage.getItem("abide.v1.data");
+ if (raw === null) {
+  db.close();
+  return { success: true, noLegacyData: true };
+        }
     const oldData = JSON.parse(raw || "{}");
 
     const schedule = oldData.schedule || [];
