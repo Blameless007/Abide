@@ -179,3 +179,107 @@ let migratedJournals = 0;
 }
 
 window.AbideDB.migrateLegacyData = migrateLegacyData;
+// Abide 2.0 — Read and save app data
+
+function getAllRecords(db, storeName) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(storeName, "readonly")
+      .objectStore(storeName).getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function getRecordById(db, storeName, id) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(storeName, "readonly")
+      .objectStore(storeName).get(id);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadAppData() {
+  const db = await openAbideDB();
+
+  try {
+    const [marker, schedule, sessions, legacy, journals] =
+      await Promise.all([
+        getRecordById(db, "appMeta", "legacy-v1-migration"),
+        getAllRecords(db, "prayerSchedules"),
+        getAllRecords(db, "prayerSessions"),
+        getAllRecords(db, "legacyCheckins"),
+        getAllRecords(db, "journals")
+      ]);
+
+    if (!marker) {
+      const raw = localStorage.getItem("abide.v1.data");
+      return raw ? JSON.parse(raw) : null;
+    }
+
+    const initialized = await getRecordById(db, "appMeta", "app-data-initialized");
+const source = initialized ? sessions : legacy;
+
+    return {
+      schedule,
+      checkins: source.map(item => ({
+        id: item.prayerId || item.id,
+        day: item.day,
+        at: item.at
+      })),
+      journals
+    };
+  } finally {
+    db.close();
+  }
+}
+
+async function saveAppData(data) {
+  const db = await openAbideDB();
+
+  try {
+    const tx = db.transaction(
+      ["appMeta", "prayerSchedules", "prayerSessions", "journals"],
+      "readwrite"
+    );
+
+    const completed = new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+
+    const schedules = tx.objectStore("prayerSchedules");
+    const sessions = tx.objectStore("prayerSessions");
+    const journals = tx.objectStore("journals");
+    tx.objectStore("appMeta").put({
+  id: "app-data-initialized",
+  updatedAt: new Date().toISOString()
+});
+
+    schedules.clear();
+    sessions.clear();
+    journals.clear();
+
+    data.schedule.forEach(item => schedules.put(item));
+
+    data.checkins.forEach(item => {
+      sessions.put({
+        ...item,
+        id: `${item.id}-${item.day}`,
+        prayerId: item.id
+      });
+    });
+
+    data.journals.forEach(item => journals.put(item));
+
+    await completed;
+  } finally {
+    db.close();
+  }
+}
+
+window.AbideDB.loadAppData = loadAppData;
+window.AbideDB.saveAppData = saveAppData;
