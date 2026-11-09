@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173c32">
+  <meta name="description" content="Abide — a quiet place to pray, reflect, and grow.">
+  <title>Abide — Pray, Reflect, Grow</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Abide home"><span class="brand-mark">a</span><span>abide<span class="brand-dot">.</span></span></a>
+      <div class="top-actions">
+        <span class="date-label" id="todayLabel"></span>
+        <button class="icon-button" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" id="homeView">
+        <div class="welcome">
+          <p class="eyebrow">A LITTLE SPACE WITH GOD</p>
+          <h1>Be still.<br><em>Be present.</em></h1>
+          <p class="subtle">You don't have to rush. Come as you are.</p>
+        </div>
+
+        <article class="verse-card">
+          <div class="verse-top"><span>✦ &nbsp; TODAY'S SCRIPTURE</span><span class="verse-ref" id="verseRef"></span></div>
+          <blockquote id="verseText"></blockquote>
+          <p class="verse-note">Take a moment. Read it slowly and let it settle.</p>
+        </article>
+
+        <div class="section-heading">
+          <div><p class="eyebrow">YOUR RHYTHM</p><h2>Prayer moments</h2></div>
+          <button class="text-button" id="manageSchedule">Edit schedule ↗</button>
+        </div>
+        <div id="prayerList" class="prayer-list"></div>
+
+        <div class="daily-progress">
+          <div class="progress-copy"><span>Today's rhythm</span><strong id="progressText">0 of 0 completed</strong></div>
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <p id="progressEncouragement">Small, faithful moments matter.</p>
+        </div>
+
+        <button class="primary-button wide" id="quickJournal">＋ Write a reflection</button>
+      </section>
+
+      <section class="view" id="prayerView">
+        <div class="page-heading"><p class="eyebrow">MAKE ROOM</p><h1>Prayer time</h1><p class="subtle">A moment to turn your attention toward God.</p></div>
+        <div class="session-card">
+          <div class="session-orbit">✦</div>
+          <p class="eyebrow">YOUR QUIET MOMENT</p>
+          <h2 id="sessionTitle">Be still</h2>
+          <p id="sessionPrompt">Take a breath. You are not here to perform; you are here to be present.</p>
+          <div class="timer" id="timer">00:00</div>
+          <div class="session-actions">
+            <button class="primary-button" id="startTimer">Begin prayer</button>
+            <button class="secondary-button" id="finishPrayer">Complete check-in</button>
+          </div>
+          <p class="tiny-note">You can pray for as long as you need. The timer is simply a gentle aid.</p>
+        </div>
+        <div class="reflection-prompt"><span>♡</span><div><strong>A thought to carry</strong><p>What do you want to bring honestly before God today?</p></div></div>
+      </section>
+
+      <section class="view" id="journalView">
+        <div class="page-heading"><p class="eyebrow">WORDS & REFLECTIONS</p><h1>Your journal</h1><p class="subtle">A private place for prayers, thoughts, and lessons.</p></div>
+        <form id="journalForm" class="journal-form">
+          <label for="journalTitle">Title <span>(optional)</span></label>
+          <input id="journalTitle" maxlength="90" placeholder="A thought, a prayer, a lesson…">
+          <label for="journalBody">What's on your heart?</label>
+          <textarea id="journalBody" rows="7" placeholder="Write freely. This space is yours…" required></textarea>
+          <div class="journal-form-bottom"><span id="wordCount">0 words</span><button class="primary-button" type="submit">Save reflection</button></div>
+          <p class="privacy-note">🔒 Your journal stays on this device in this browser.</p>
+        </form>
+        <div class="section-heading journal-heading"><div><p class="eyebrow">LOOKING BACK</p><h2>Past reflections</h2></div><span class="count-pill" id="entryCount">0 entries</span></div>
+        <div id="journalEntries" class="journal-entries"></div>
+      </section>
+
+      <section class="view" id="historyView">
+        <div class="page-heading"><p class="eyebrow">NOTICE YOUR GROWTH</p><h1>Your journey</h1><p class="subtle">Not a score. A gentle record of showing up.</p></div>
+        <div class="stats-grid">
+          <article class="stat-card"><span>Prayer check-ins</span><strong id="totalCheckins">0</strong><small>All time</small></article>
+          <article class="stat-card"><span>Journal entries</span><strong id="totalJournals">0</strong><small>All time</small></article>
+        </div>
+        <article class="history-card"><p class="eyebrow">THIS WEEK</p><h2>Moments of presence</h2><div id="weekBars" class="week-bars"></div><p class="tiny-note">A missed day isn't a failure. Begin again whenever you're ready.</p></article>
+        <button class="secondary-button wide" id="exportData">Export my data</button>
+      </section>
+
+      <section class="view" id="settingsView">
+        <div class="page-heading"><p class="eyebrow">MAKE IT YOURS</p><h1>Settings</h1><p class="subtle">Shape a rhythm that works with your life.</p></div>
+        <article class="settings-card">
+          <div class="section-heading"><div><p class="eyebrow">YOUR PRAYER RHYTHM</p><h2>Prayer schedule</h2></div><button class="text-button" id="addPrayer">＋ Add</button></div>
+          <div id="settingsSchedule"></div>
+          <p class="tiny-note">Set as many prayer moments as you need. Times are reminders for your rhythm, not rules.</p>
+        </article>
+        <article class="settings-card">
+          <p class="eyebrow">YOUR DATA</p><h2>Private by design</h2>
+          <p class="subtle">Your prayer history and journal are saved in this browser on this device. They are not uploaded to a server. Clearing browser data may erase them.</p>
+          <button class="secondary-button wide" id="downloadBackup">Download backup</button>
+          <button class="danger-button wide" id="clearData">Clear all Abide data</button>
+        </article>
+        <p class="version-note">ABIDE · VERSION 1.0 · PRAY, REFLECT, GROW</p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="nav-item selected" data-view="homeView"><span>⌂</span><small>Home</small></button>
+      <button class="nav-item" data-view="prayerView"><span>♡</span><small>Pray</small></button>
+      <button class="nav-item" data-view="journalView"><span>✎</span><small>Journal</small></button>
+      <button class="nav-item" data-view="historyView"><span>◷</span><small>Journey</small></button>
+    </nav>
+  </div>
+
+  <div class="modal-backdrop" id="prayerModal" hidden>
+    <form class="modal" id="prayerForm">
+      <button type="button" class="modal-close" data-close="prayerModal">×</button>
+      <p class="eyebrow">YOUR DAILY RHYTHM</p><h2 id="prayerModalTitle">Add a prayer moment</h2>
+      <label for="prayerName">Name</label><input id="prayerName" maxlength="40" placeholder="e.g. Morning prayer" required>
+      <label for="prayerTime">Time</label><input id="prayerTime" type="time" value="06:00" required>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close="prayerModal">Cancel</button><button class="primary-button" type="submit">Save</button></div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+    }
+  </script>
+</body>
+</html>
