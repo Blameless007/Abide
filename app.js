@@ -40,10 +40,12 @@ $("testMigration").onclick = async () => {
     const result = await window.AbideDB.migrateLegacyData();
 
     if (result.alreadyMigrated) {
-      toast("Migration was already completed.");
-    } else {
-      toast(`Copied ${result.schedules} schedules, ${result.checkins} check-ins and ${result.journals} journal entries.`);
-    }
+  toast("Migration was already completed.");
+} else if (result.noLegacyData) {
+  toast("No previous data found.");
+} else {
+  toast(`Copied ${result.schedules} schedules, ${result.checkins} check-ins and ${result.journals} journal entries.`);
+}
   } catch (error) {
     console.error(error);
     toast("Migration failed. Your original data is still safe.");
