@@ -9,17 +9,52 @@ const verses = [
   {text:"Let the word of Christ dwell in you richly.",ref:"Colossians 3:16"}
 ];
 const defaults = {schedule:[{id:"p1",name:"Morning prayer",time:"06:00"},{id:"p2",name:"Midday pause",time:"12:30"},{id:"p3",name:"Evening prayer",time:"20:30"}],checkins:[],journals:[]};
-let data = loadData(), editingPrayerId = null, timerSeconds=0, timerInterval=null;
+let data = structuredClone(defaults), editingPrayerId = null, timerSeconds=0, timerInterval=null;
 const $ = id => document.getElementById(id);
 function loadData(){try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch{return structuredClone(defaults)}}
-function saveData(){localStorage.setItem(KEY,JSON.stringify(data));}
+let saveQueue = Promise.resolve();
+
+function saveData(){
+  localStorage.setItem(KEY, JSON.stringify(data));
+  const snapshot = structuredClone(data);
+
+  saveQueue = saveQueue.then(() => window.AbideDB.saveAppData(snapshot)).catch(error => {
+    console.error(error);
+    toast("Database save failed. Please reload.");
+  });
+
+  return saveQueue;
+}
 function dateKey(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function escapeHTML(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400)}
 function showView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("selected",b.dataset.view===id));if(id==="historyView")renderHistory();if(id==="journalView")renderJournals();if(id==="settingsView")renderSettings();window.scrollTo({top:0,behavior:"smooth"})}
 document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
 $("settingsBtn").onclick=()=>showView("settingsView");$("manageSchedule").onclick=()=>showView("settingsView");$("quickJournal").onclick=()=>{showView("journalView");$("journalBody").focus()};
-function init(){const now=new Date();$("todayLabel").textContent=now.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});const v=verses[Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000))%verses.length];$("verseText").textContent="“"+v.text+"”";$("verseRef").textContent=v.ref;renderPrayerList();renderJournals();renderHistory();$("journalBody").addEventListener("input",()=>{$("wordCount").textContent=($("journalBody").value.trim().match(/\S+/g)||[]).length+" words"});}
+async function init(){
+  try {
+    const stored = await window.AbideDB.loadAppData();
+    data = {...defaults, ...(stored || {})};
+    await window.AbideDB.saveAppData(data);
+    localStorage.setItem(KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error(error);
+    toast("Unable to load saved data. Please reload.");
+    return;
+  }
+
+  const now = new Date();
+  $("todayLabel").textContent = now.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+  const v = verses[Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000))%verses.length];
+  $("verseText").textContent = "“"+v.text+"”";
+  $("verseRef").textContent = v.ref;
+  renderPrayerList();
+  renderJournals();
+  renderHistory();
+  $("journalBody").addEventListener("input",()=>{
+    $("wordCount").textContent = ($("journalBody").value.trim().match(/\S+/g)||[]).length+" words";
+  });
+}
 function isDone(id,day=dateKey()){return data.checkins.some(c=>c.id===id&&c.day===day)}
 function renderPrayerList(){const host=$("prayerList");if(!data.schedule.length){host.innerHTML='<div class="empty-state">Your prayer rhythm starts with one moment.<br>Open Settings to add a prayer time.</div>'}else{host.innerHTML=[...data.schedule].sort((a,b)=>a.time.localeCompare(b.time)).map(p=>`<div class="prayer-row"><div class="prayer-icon">♡</div><div class="prayer-info"><strong>${escapeHTML(p.name)}</strong><small>${formatTime(p.time)}</small></div><button class="check-button ${isDone(p.id)?"done":""}" data-check="${p.id}">${isDone(p.id)?"✓ Checked in":"Check in"}</button></div>`).join("")}
 host.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>checkIn(b.dataset.check));const done=data.schedule.filter(p=>isDone(p.id)).length,total=data.schedule.length;$("progressText").textContent=`${done} of ${total} completed`;$("progressBar").style.width=(total?done/total*100:0)+"%";$("progressEncouragement").textContent=total&&done===total?"You've made room for every moment today. Grace for tomorrow, too.":done?"Every moment of turning toward God matters.":"Small, faithful moments matter."}
@@ -51,5 +86,15 @@ $("testMigration").onclick = async () => {
     toast("Migration failed. Your original data is still safe.");
   }
 };
-$("clearData").onclick=()=>{if(confirm("This permanently clears your prayer schedule, check-ins, and journal from this browser. Download a backup first if you want to keep them.")){localStorage.removeItem(KEY);data=structuredClone(defaults);renderSettings();renderPrayerList();renderJournals();renderHistory();toast("Abide has been reset.")}};
+$("clearData").onclick=()=>{
+  if(confirm("This permanently clears your prayer schedule, check-ins, and journal from this browser. Download a backup first if you want to keep them.")){
+    data=structuredClone(defaults);
+    saveData();
+    renderSettings();
+    renderPrayerList();
+    renderJournals();
+    renderHistory();
+    toast("Abide has been reset.");
+  }
+};
 init();
