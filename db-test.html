@@ -7,42 +7,49 @@
 </head>
 <body>
   <h2>Abide 2.0 Database Test</h2>
-  <p id="status">Checking browser support...</p>
+  <p id="status">Loading Abide database...</p>
+
+  <script src="./db.js"></script>
 
   <script>
     const status = document.getElementById("status");
 
-    if (!("indexedDB" in window)) {
-      status.textContent = "FAILED: IndexedDB is not supported.";
-    } else {
-      const request = indexedDB.open("abide-test-isolated", 1);
+    async function testDatabase() {
+      try {
+        const db = await window.AbideDB.open();
 
-      request.onupgradeneeded = () => {
-        request.result.createObjectStore("testRecords", {
-          keyPath: "id"
-        });
-      };
+        const expected = [
+          "appMeta",
+          "prayerSchedules",
+          "prayerSessions",
+          "legacyCheckins",
+          "journals",
+          "prayerRequests",
+          "propheticWords",
+          "playlists",
+          "audioLibrary",
+          "settings",
+          "migrationArchive"
+        ];
 
-      request.onsuccess = () => {
-        const db = request.result;
-        const tx = db.transaction("testRecords", "readwrite");
+        const missing = expected.filter(
+          name => !db.objectStoreNames.contains(name)
+        );
 
-        tx.objectStore("testRecords").put({
-          id: "test-1",
-          message: "Abide database test passed"
-        });
-
-        tx.oncomplete = () => {
+        if (missing.length > 0) {
+          status.textContent = "FAILED: Missing stores: " + missing.join(", ");
+        } else {
           status.textContent =
-            "SUCCESS: Database created and test record saved.";
-          db.close();
-        };
-      };
+            "SUCCESS: All 11 Abide database stores created correctly.";
+        }
 
-      request.onerror = () => {
-        status.textContent = "FAILED: " + request.error;
-      };
+        db.close();
+      } catch (error) {
+        status.textContent = "FAILED: " + error.message;
+      }
     }
+
+    testDatabase();
   </script>
 </body>
 </html>
