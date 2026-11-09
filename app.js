@@ -19,8 +19,26 @@ function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show")
 function showView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("selected",b.dataset.view===id));if(id==="historyView")renderHistory();if(id==="journalView")renderJournals();if(id==="settingsView")renderSettings();window.scrollTo({top:0,behavior:"smooth"})}
 document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
 $("settingsBtn").onclick=()=>showView("settingsView");$("manageSchedule").onclick=()=>showView("settingsView");$("quickJournal").onclick=()=>{showView("journalView");$("journalBody").focus()};
-function init(){const now=new Date();$("todayLabel").textContent=now.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});const v=verses[Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000))%verses.length];$("verseText").textContent="“"+v.text+"”";$("verseRef").textContent=v.ref;renderPrayerList();renderJournals();renderHistory();$("journalBody").addEventListener("input",()=>{$("wordCount").textContent=($("journalBody").value.trim().match(/\S+/g)||[]).length+" words"});}
-function isDone(id,day=dateKey()){return data.checkins.some(c=>c.id===id&&c.day===day)}
+function // Abide 2.0 — Database startup check
+// Existing app data remains in LocalStorage for now.
+
+async function initializeDatabase() {
+  try {
+    const db = await window.AbideDB.open();
+
+    console.info("Abide database opened successfully.");
+
+    db.close();
+  } catch (error) {
+    console.error("Abide database could not be opened:", error);
+  }
+}
+
+// Start the existing app normally.
+init();
+
+// Prepare the new database separately.
+initializeDatabase();
 function renderPrayerList(){const host=$("prayerList");if(!data.schedule.length){host.innerHTML='<div class="empty-state">Your prayer rhythm starts with one moment.<br>Open Settings to add a prayer time.</div>'}else{host.innerHTML=[...data.schedule].sort((a,b)=>a.time.localeCompare(b.time)).map(p=>`<div class="prayer-row"><div class="prayer-icon">♡</div><div class="prayer-info"><strong>${escapeHTML(p.name)}</strong><small>${formatTime(p.time)}</small></div><button class="check-button ${isDone(p.id)?"done":""}" data-check="${p.id}">${isDone(p.id)?"✓ Checked in":"Check in"}</button></div>`).join("")}
 host.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>checkIn(b.dataset.check));const done=data.schedule.filter(p=>isDone(p.id)).length,total=data.schedule.length;$("progressText").textContent=`${done} of ${total} completed`;$("progressBar").style.width=(total?done/total*100:0)+"%";$("progressEncouragement").textContent=total&&done===total?"You've made room for every moment today. Grace for tomorrow, too.":done?"Every moment of turning toward God matters.":"Small, faithful moments matter."}
 function formatTime(t){const [h,m]=t.split(":").map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
