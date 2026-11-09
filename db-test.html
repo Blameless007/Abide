@@ -3,53 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Abide Database Test</title>
+  <title>Abide Migration Test</title>
 </head>
 <body>
-  <h2>Abide 2.0 Database Test</h2>
-  <p id="status">Loading Abide database...</p>
+  <h2>Abide 2.0 Migration Test</h2>
+  <p id="status">Preparing test...</p>
 
   <script src="./db.js"></script>
 
   <script>
     const status = document.getElementById("status");
 
-    async function testDatabase() {
+    async function getRecords(db, store) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, "readonly");
+        const request = tx.objectStore(store).getAll();
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function getRecord(db, store, id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, "readonly");
+        const request = tx.objectStore(store).get(id);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function runTest() {
+      let db;
+
       try {
-        const db = await window.AbideDB.open();
+        const markerId = "legacy-v1-migration";
 
-        const expected = [
-          "appMeta",
-          "prayerSchedules",
-          "prayerSessions",
-          "legacyCheckins",
-          "journals",
-          "prayerRequests",
-          "propheticWords",
-          "playlists",
-          "audioLibrary",
-          "settings",
-          "migrationArchive"
-        ];
-
-        const missing = expected.filter(
-          name => !db.objectStoreNames.contains(name)
-        );
-
-        if (missing.length > 0) {
-          status.textContent = "FAILED: Missing stores: " + missing.join(", ");
-        } else {
-          status.textContent =
-            "SUCCESS: All 11 Abide database stores created correctly.";
+        // Never overwrite existing data in this test environment.
+        if (localStorage.getItem("abide.v1.data") !== null) {
+          throw new Error(
+            "STOP: Test data key already exists. Nothing was overwritten."
+          );
         }
 
-        db.close();
+        db = await window.AbideDB.open();
+
+        const existingMarker = await getRecord(
+          db, "appMeta", markerId
+        );
+
+        if (existingMarker) {
+          throw new Error(
+            "STOP: A previous migration test already exists."
+          );
+        }
+
+        const sample = {
+          schedule: [
+            { id: "test-schedule-1", name: "Sample schedule" }
+          ],
+          checkins: [
+            { id: "test-prayer-1", day: "2026-11-09" }
+          ],
+          journals: [
+            { id: "test-journal-1", title: "Sample journal" }
+          ]
+        };
+
+        const original = JSON.stringify(sample);
+
+        localStorage.setItem("abide.v1.data", original);
+
+        const first = await window.AbideDB.migrateLegacyData();
+
+        const schedules = await getRecords(db, "prayerSchedules");
+        const checkins = await getRecords(db, "legacyCheckins");
+        const journals = await getRecords(db, "journals");
+        const archive = await getRecord(
+          db, "migrationArchive", markerId
+        );
+
+        const second = await window.AbideDB.migrateLegacyData();
+
+        const originalUnchanged =
+          localStorage.getItem("abide.v1.data") === original;
+
+        const passed =
+          first.success &&
+          first.schedules === 1 &&
+          first.checkins === 1 &&
+          first.journals === 1 &&
+          schedules.length === 1 &&
+          checkins.length === 1 &&
+          journals.length === 1 &&
+          archive &&
+          archive.originalData === original &&
+          second.alreadyMigrated &&
+          originalUnchanged;
+
+        status.textContent = passed
+          ? "SUCCESS: Migration, backup, record counts, repeat protection and original data checks passed."
+          : "FAILED: One or more migration checks did not pass.";
+
+        if (!passed) {
+          console.log({
+            first, schedules, checkins, journals,
+            archive, second, originalUnchanged
+          });
+        }
+
       } catch (error) {
-        status.textContent = "FAILED: " + error.message;
+        status.textContent = "STOP / FAILED: " + error.message;
+        console.error(error);
+      } finally {
+        if (db) db.close();
       }
     }
 
-    testDatabase();
+    runTest();
   </script>
 </body>
 </html>
