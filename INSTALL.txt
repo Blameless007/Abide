@@ -1,0 +1,42 @@
+ABIDE AUDIO FEATURE — FILE BUNDLE
+
+FILES IN THIS ZIP
+1. audio.js       New audio library logic and screen.
+2. audio.css      New audio library styling.
+3. sw.js          Replacement service worker with audio files cached.
+
+IMPORTANT: two small edits are also required in your existing index.html.
+
+A) In the <head>, directly after:
+<link rel="stylesheet" href="./styles.css">
+
+ADD:
+<link rel="stylesheet" href="./audio.css">
+
+B) At the bottom of index.html, directly after:
+<script src="./app.js"></script>
+
+ADD:
+<script src="./audio.js"></script>
+
+UPLOAD TO THE ROOT OF THE GITHUB REPOSITORY
+- audio.js
+- audio.css
+- sw.js (replace the existing sw.js)
+
+Do not upload this instructions file into the app unless you want to keep it as a note.
+
+The audio screen and Audio navigation button are created by audio.js automatically.
+The feature uses the existing IndexedDB database and audioLibrary store from db.js.
+
+SUPPORTED SOURCES
+- Audio files selected from the device (stored locally in IndexedDB)
+- Direct HTTPS audio URLs
+- YouTube links (embedded player)
+- SoundCloud links (embedded player)
+
+NOTES
+- YouTube/SoundCloud playback depends on the platform allowing embedding and network access.
+- Local audio files use device/browser storage limits.
+- Do not replace db.js or app.js for this feature.
+- After uploading, reload the app. If the old version remains, close and reopen the app or refresh the browser so the updated service worker activates.
