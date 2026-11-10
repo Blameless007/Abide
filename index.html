@@ -13,12 +13,17 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="Abide home"><span class="brand-mark">a</span><span>abide<span class="brand-dot">.</span></span></a>
-      <div class="top-actions">
-        <span class="date-label" id="todayLabel"></span>
-        <button class="icon-button" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
-      </div>
-    </header>
+  <a class="brand" href="#" aria-label="Abide home"><span class="brand-mark">a</span><span>abide<span class="brand-dot">.</span></span></a>
+  <div class="top-actions">
+    <span class="date-label" id="todayLabel"></span>
+    <div class="streak-badge">
+      <span id="prayerStreak">0</span>
+      <small>🔥</small>
+      <span id="streakMessage" hidden></span>
+    </div>
+    <button class="icon-button" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
+  </div>
+</header>
 
     <main>
       <section class="view active" id="homeView">
@@ -29,10 +34,7 @@
       <h1>Be still.<br><em>Be present.</em></h1>
       <p class="subtle">You don't have to rush. Come as you are.</p>
     </div>
-    <div class="streak-badge">
-      <span id="prayerStreak">0</span>
-      <small>Day Streak 🔥</small>
-    </div>
+    
   </div>
 </div>
         <article class="verse-card">
