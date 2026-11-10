@@ -1,4 +1,5 @@
-const CACHE = "abide-shell-v5";
+
+const CACHE = "abide-shell-v6";
 
 const ASSETS = [
   "./",
@@ -48,6 +49,7 @@ self.addEventListener("fetch", event => {
       .then(response => {
         if (response.ok) {
           const copy = response.clone();
+
           caches.open(CACHE).then(cache =>
             cache.put(request, copy)
           );
