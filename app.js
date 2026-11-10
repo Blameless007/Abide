@@ -73,6 +73,12 @@ async function init(){
   }
 
   const now = new Date();
+  const hour = now.getHours();
+$("greetingText").textContent = hour < 12
+  ? "GOOD MORNING"
+  : hour < 17
+  ? "GOOD AFTERNOON"
+  : "GOOD EVENING";
   $("todayLabel").textContent = now.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
   const v = verses[Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000))%verses.length];
   $("verseText").textContent = "“"+v.text+"”";
