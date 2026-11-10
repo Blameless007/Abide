@@ -1,0 +1,272 @@
+/* ABIDE 2.0 — PERSONAL RECORDS */
+
+.records-heading {
+  margin-bottom: 22px;
+}
+
+.records-heading h1 {
+  margin: 5px 0 8px;
+  color: var(--forest);
+  font: 400 29px Georgia, serif;
+}
+
+.records-heading .subtle {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.records-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-bottom: 16px;
+  padding: 5px;
+  background: var(--sage2);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+}
+
+.records-tab {
+  border: 0;
+  border-radius: 9px;
+  padding: 11px 8px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.records-tab.active {
+  background: var(--forest);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(23, 60, 50, .13);
+}
+
+.records-panel {
+  display: none;
+}
+
+.records-panel.active {
+  display: block;
+}
+
+.records-form {
+  display: grid;
+  gap: 8px;
+}
+
+.records-form label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--forest);
+  margin-top: 7px;
+}
+
+.records-form input,
+.records-form textarea,
+.records-form select,
+.record-controls select {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.records-form textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.records-form button {
+  margin-top: 10px;
+}
+
+.records-guidance {
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.records-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 11px;
+}
+
+.records-list-heading h2,
+.records-journal-link h2 {
+  margin: 0;
+  font: 400 20px Georgia, serif;
+  color: var(--forest);
+}
+
+.records-list {
+  display: grid;
+  gap: 10px;
+}
+
+.record-card {
+  padding: 15px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  box-shadow: var(--shadow);
+}
+
+.record-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.record-category {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--forest);
+  background: var(--sage2);
+  padding: 5px 8px;
+  border-radius: 20px;
+}
+
+.record-date {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.record-card h3 {
+  font: 600 15px Georgia, serif;
+  color: var(--forest);
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.record-card > p {
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.record-card blockquote {
+  margin: 0 0 12px;
+  padding: 12px;
+  border-left: 3px solid var(--gold);
+  background: var(--cream);
+  font: 14px/1.7 Georgia, serif;
+  overflow-wrap: anywhere;
+}
+
+.record-reflection {
+  padding: 11px;
+  background: var(--sage2);
+  border-radius: 9px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.record-reflection p {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.record-controls {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+
+.record-controls label {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.record-controls select {
+  padding: 8px;
+  font-size: 11px;
+}
+
+.record-delete {
+  border: 1px solid #f0d8d4;
+  border-radius: 20px;
+  padding: 8px 12px;
+  background: #fbefed;
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.records-journal-link {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 17px;
+  background: var(--sage2);
+  border: 1px solid #dce5d9;
+  border-radius: 13px;
+}
+
+.records-journal-link p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 7px 0 0;
+}
+
+.records-journal-link button {
+  justify-self: start;
+}
+
+.records-footer {
+  margin-top: 17px;
+}
+
+.records-footer .tiny-note {
+  line-height: 1.6;
+}
+
+.records-status {
+  min-height: 16px;
+  color: var(--forest);
+  font-size: 10px;
+}
+
+.records-status.is-error {
+  color: var(--danger);
+}
+
+.records-shortcut {
+  margin-top: 14px;
+}
+
+@media (max-width: 360px) {
+  .record-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .record-delete {
+    align-self: flex-start;
+  }
+}

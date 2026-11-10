@@ -1,35 +1,43 @@
-/* Abide 2.0 — Personal Records */
+/* ABIDE 2.0 — PERSONAL RECORDS */
 (() => {
   "use strict";
 
   const $ = id => document.getElementById(id);
   let db;
 
-  const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;"
+  const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   })[c]);
 
-  const newId = () =>
-    crypto.randomUUID ? crypto.randomUUID() : `record-${Date.now()}-${Math.random()}`;
+  const createId = () =>
+    crypto.randomUUID
+      ? crypto.randomUUID()
+      : `record-${Date.now()}-${Math.random()}`;
 
   function openDB() {
     if (db) return Promise.resolve(db);
 
-    return window.AbideDB.open().then(connection => {
-      db = connection;
+    if (!window.AbideDB || typeof window.AbideDB.open !== "function") {
+      return Promise.reject(new Error("Abide database is unavailable."));
+    }
 
-      ["prayerRequests", "propheticWords"].forEach(store => {
-        if (!db.objectStoreNames.contains(store)) {
-          throw new Error(`${store} storage is missing.`);
-        }
-      });
+    return window.AbideDB.open().then(database => {
+      db = database;
+
+      if (!db.objectStoreNames.contains("prayerRequests") ||
+          !db.objectStoreNames.contains("propheticWords")) {
+        throw new Error("Personal records database stores are missing.");
+      }
 
       return db;
     });
   }
 
-  function requestResult(request) {
+  function dbRequest(request) {
     return new Promise((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -38,7 +46,7 @@
 
   async function getAll(store) {
     const database = await openDB();
-    return requestResult(
+    return dbRequest(
       database.transaction(store, "readonly")
         .objectStore(store).getAll()
     );
@@ -46,7 +54,7 @@
 
   async function save(store, record) {
     const database = await openDB();
-    return requestResult(
+    return dbRequest(
       database.transaction(store, "readwrite")
         .objectStore(store).put(record)
     );
@@ -54,16 +62,27 @@
 
   async function remove(store, id) {
     const database = await openDB();
-    return requestResult(
+    return dbRequest(
       database.transaction(store, "readwrite")
         .objectStore(store).delete(id)
     );
   }
 
   function dateLabel(value) {
-    return value
-      ? new Date(value).toLocaleDateString([], { dateStyle: "medium" })
-      : "Date not set";
+    if (!value) return "Date not set";
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? "Date not set"
+      : date.toLocaleDateString([], { dateStyle: "medium" });
+  }
+
+  function setStatus(message, error = false) {
+    const element = $("recordsStatus");
+    if (!element) return;
+
+    element.textContent = message;
+    element.classList.toggle("is-error", error);
   }
 
   function ensureInterface() {
@@ -77,7 +96,7 @@
     view.id = "recordsView";
 
     view.innerHTML = `
-      <div class="page-heading">
+      <div class="records-heading">
         <p class="eyebrow">KEEP WHAT MATTERS</p>
         <h1>Personal records</h1>
         <p class="subtle">
@@ -141,9 +160,8 @@
           <h2>Save a prophetic word</h2>
 
           <p class="records-guidance">
-            Preserve the exact wording first. Add your interpretation
-            or reflection separately, so the original message is not
-            unintentionally changed.
+            Preserve the original wording. Keep your personal
+            interpretation and reflection separate.
           </p>
 
           <form id="wordForm" class="records-form">
@@ -241,7 +259,9 @@
     $("exportRecords").addEventListener("click", exportRecords);
 
     view.querySelectorAll("[data-tab]").forEach(button => {
-      button.addEventListener("click", () => switchTab(button.dataset.tab));
+      button.addEventListener("click", () =>
+        switchTab(button.dataset.tab)
+      );
     });
   }
 
@@ -289,14 +309,6 @@
     });
   }
 
-  function showStatus(message, error = false) {
-    const element = $("recordsStatus");
-    if (!element) return;
-
-    element.textContent = message;
-    element.classList.toggle("is-error", error);
-  }
-
   async function saveRequest(event) {
     event.preventDefault();
 
@@ -304,22 +316,24 @@
     if (!title) return;
 
     try {
+      const now = new Date().toISOString();
+
       await save("prayerRequests", {
-        id: newId(),
+        id: createId(),
         title,
         category: $("requestCategory").value,
         details: $("requestDetails").value.trim(),
         status: "Ongoing",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: now,
+        updatedAt: now
       });
 
       event.target.reset();
-      showStatus("Prayer request saved on this device.");
+      setStatus("Prayer request saved.");
       await renderRequests();
 
     } catch (error) {
-      showStatus(error.message || "Could not save prayer request.", true);
+      setStatus(error.message || "Could not save prayer request.", true);
     }
   }
 
@@ -330,31 +344,33 @@
     if (!originalText) return;
 
     try {
+      const now = new Date().toISOString();
+
       await save("propheticWords", {
-        id: newId(),
+        id: createId(),
         originalText,
         receivedDate: $("wordDate").value,
         source: $("wordSource").value.trim(),
         scripture: $("wordScripture").value.trim(),
         reflection: $("wordReflection").value.trim(),
         status: "To reflect on",
-        createdAt: new Date().toISOString()
+        createdAt: now
       });
 
       event.target.reset();
-      showStatus("Prophetic word saved. Original wording preserved.");
+      setStatus("Prophetic word saved.");
       await renderWords();
 
     } catch (error) {
-      showStatus(error.message || "Could not save prophetic word.", true);
+      setStatus(error.message || "Could not save prophetic word.", true);
     }
   }
 
   async function renderRequests() {
     try {
       const items = (await getAll("prayerRequests")).sort(
-        (a, b) => (b.updatedAt || b.createdAt)
-          .localeCompare(a.updatedAt || a.createdAt)
+        (a, b) => String(b.updatedAt || b.createdAt || "")
+          .localeCompare(String(a.updatedAt || a.createdAt || ""))
       );
 
       $("requestCount").textContent = items.length;
@@ -363,54 +379,54 @@
         ? items.map(item => `
           <article class="record-card">
             <div class="record-card-top">
-              <span class="record-category">${esc(item.category)}</span>
+              <span class="record-category">${escapeHTML(item.category)}</span>
               <span class="record-date">${dateLabel(item.createdAt)}</span>
             </div>
 
-            <h3>${esc(item.title)}</h3>
+            <h3>${escapeHTML(item.title)}</h3>
 
             ${item.details
-              ? `<p>${esc(item.details).replace(/\n/g, "<br>")}</p>`
+              ? `<p>${escapeHTML(item.details).replace(/\n/g, "<br>")}</p>`
               : ""}
 
             <div class="record-controls">
               <label>
                 Status
-                <select data-request-status="${esc(item.id)}">
+                <select data-request-status="${escapeHTML(item.id)}">
                   ${["Ongoing", "Answered", "Archived"].map(status =>
-                    `<option ${item.status === status ? "selected" : ""}>${status}</option>`
+                    `<option value="${status}" ${item.status === status ? "selected" : ""}>${status}</option>`
                   ).join("")}
                 </select>
               </label>
 
               <button class="record-delete" type="button"
-                data-request-delete="${esc(item.id)}">
+                data-request-delete="${escapeHTML(item.id)}">
                 Delete
               </button>
             </div>
           </article>
         `).join("")
         : `<div class="empty-state">
-            No prayer requests yet. Add one above to keep it in view.
+            No prayer requests yet. Add one above.
           </div>`;
 
     } catch (error) {
-      showStatus(error.message || "Could not load prayer requests.", true);
+      setStatus(error.message || "Could not load prayer requests.", true);
     }
   }
 
   async function renderWords() {
     try {
       const items = (await getAll("propheticWords")).sort(
-        (a, b) => (b.receivedDate || b.createdAt)
-          .localeCompare(a.receivedDate || a.createdAt)
+        (a, b) => String(b.receivedDate || b.createdAt || "")
+          .localeCompare(String(a.receivedDate || a.createdAt || ""))
       );
 
       $("wordCount").textContent = items.length;
 
       $("wordList").innerHTML = items.length
         ? items.map(item => `
-          <article class="record-card word-record">
+          <article class="record-card">
             <div class="record-card-top">
               <span class="record-category">Original record</span>
               <span class="record-date">
@@ -421,41 +437,41 @@
             <h3>Original wording</h3>
 
             <blockquote>
-              ${esc(item.originalText).replace(/\n/g, "<br>")}
+              ${escapeHTML(item.originalText).replace(/\n/g, "<br>")}
             </blockquote>
 
             ${item.source
-              ? `<p><strong>Source / context:</strong> ${esc(item.source)}</p>`
+              ? `<p><strong>Source / context:</strong> ${escapeHTML(item.source)}</p>`
               : ""}
 
             ${item.scripture
-              ? `<p><strong>Scripture:</strong> ${esc(item.scripture)}</p>`
+              ? `<p><strong>Scripture:</strong> ${escapeHTML(item.scripture)}</p>`
               : ""}
 
             ${item.reflection
               ? `<div class="record-reflection">
                   <strong>Personal reflection</strong>
-                  <p>${esc(item.reflection).replace(/\n/g, "<br>")}</p>
+                  <p>${escapeHTML(item.reflection).replace(/\n/g, "<br>")}</p>
                 </div>`
               : ""}
 
             <div class="record-controls">
               <label>
                 Status
-                <select data-word-status="${esc(item.id)}">
+                <select data-word-status="${escapeHTML(item.id)}">
                   ${[
                     "To reflect on",
                     "Under prayer",
                     "Fulfilled",
                     "Set aside"
                   ].map(status =>
-                    `<option ${item.status === status ? "selected" : ""}>${status}</option>`
+                    `<option value="${status}" ${item.status === status ? "selected" : ""}>${status}</option>`
                   ).join("")}
                 </select>
               </label>
 
               <button class="record-delete" type="button"
-                data-word-delete="${esc(item.id)}">
+                data-word-delete="${escapeHTML(item.id)}">
                 Delete
               </button>
             </div>
@@ -466,7 +482,7 @@
           </div>`;
 
     } catch (error) {
-      showStatus(error.message || "Could not load prophetic words.", true);
+      setStatus(error.message || "Could not load prophetic words.", true);
     }
   }
 
@@ -484,19 +500,19 @@
           item.updatedAt = new Date().toISOString();
 
           await save("prayerRequests", item);
-          showStatus("Prayer request updated.");
+          setStatus("Prayer request updated.");
           await renderRequests();
         }
       }
 
       if (deleteId && confirm("Delete this prayer request?")) {
         await remove("prayerRequests", deleteId);
-        showStatus("Prayer request deleted.");
+        setStatus("Prayer request deleted.");
         await renderRequests();
       }
 
     } catch (error) {
-      showStatus(error.message || "Could not update this request.", true);
+      setStatus(error.message || "Could not update request.", true);
     }
   }
 
@@ -512,20 +528,19 @@
         if (item) {
           item.status = event.target.value;
           await save("propheticWords", item);
-
-          showStatus("Record status updated.");
+          setStatus("Record status updated.");
           await renderWords();
         }
       }
 
       if (deleteId && confirm("Delete this prophetic word?")) {
         await remove("propheticWords", deleteId);
-        showStatus("Prophetic word deleted.");
+        setStatus("Prophetic word deleted.");
         await renderWords();
       }
 
     } catch (error) {
-      showStatus(error.message || "Could not update this record.", true);
+      setStatus(error.message || "Could not update record.", true);
     }
   }
 
@@ -559,11 +574,10 @@
       anchor.remove();
 
       URL.revokeObjectURL(url);
-
-      showStatus("Your personal records backup has been exported.");
+      setStatus("Personal records exported.");
 
     } catch (error) {
-      showStatus(error.message || "Could not export records.", true);
+      setStatus(error.message || "Could not export records.", true);
     }
   }
 
