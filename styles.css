@@ -30,3 +30,34 @@
   font-size:11px;
   line-height:1.5;
 }
+.welcome-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.streak-badge{
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  margin-top:4px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:var(--sage2);
+  color:var(--forest);
+}
+
+.streak-badge span{
+  font-family:Georgia,serif;
+  font-size:21px;
+  line-height:1;
+}
+
+.streak-badge small{
+  font-size:8px;
+  white-space:nowrap;
+  color:var(--forest2);
+                        }
