@@ -1,5 +1,5 @@
 
-const CACHE = "abide-shell-v6";
+const CACHE = "abide-shell-v7";
 
 const ASSETS = [
   "./",
@@ -15,26 +15,40 @@ const ASSETS = [
   "./icon.svg"
 ];
 
+// Install the latest app files.
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(ASSETS))
+      .then(cache => {
+        return cache.addAll(
+          ASSETS.map(path =>
+            new Request(path, { cache: "reload" })
+          )
+        );
+      })
       .then(() => self.skipWaiting())
   );
 });
 
+// Activate the new version immediately.
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(key =>
-          key.startsWith("abide-shell-") && key !== CACHE
-        ).map(key => caches.delete(key))
-      ))
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key =>
+              key.startsWith("abide-shell-") &&
+              key !== CACHE
+            )
+            .map(key => caches.delete(key))
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
 
+// Prefer internet; use cached files when offline.
 self.addEventListener("fetch", event => {
   const request = event.request;
 
