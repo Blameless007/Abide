@@ -9,6 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./audio.css">
 </head>
 <body>
   <div class="app-shell">
@@ -161,6 +162,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./db.js"></script>
 <script src="./app.js"></script>
+<script src="./audio.js"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
