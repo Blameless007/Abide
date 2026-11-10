@@ -61,6 +61,7 @@ function showView(id){document.querySelectorAll(".view").forEach(v=>v.classList.
 document.querySelectorAll(".nav-item[data-view]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
 $("journeyShortcut").onclick=()=>showView("historyView");
 $("settingsShortcut").onclick=()=>showView("settingsView");
+$("bibleTab").onclick=()=>window.location.href="https://www.bible.com/";
 $("settingsBtn").onclick=()=>showView("settingsView");$("manageSchedule").onclick=()=>showView("settingsView");$("quickJournal").onclick=()=>{showView("journalView");$("journalBody").focus()};
 async function init(){
   try {
