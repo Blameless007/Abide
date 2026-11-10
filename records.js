@@ -326,7 +326,11 @@
     more.appendChild(shortcut);
 
     $("recordsShortcut").addEventListener("click", showRecords);
-    $("openGeneralJournal").addEventListener("click", showJournal);
+    const journalShortcut = $("openGeneralJournal");
+
+if (journalShortcut) {
+  journalShortcut.addEventListener("click", showJournal);
+}
 
     $("requestForm").addEventListener("submit", saveRequest);
     $("wordForm").addEventListener("submit", saveWord);
