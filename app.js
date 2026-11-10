@@ -26,6 +26,35 @@ function saveData(){
   return saveQueue;
 }
 function dateKey(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function getPrayerStreak(){
+  const completedDays = new Set(data.checkins.map(c => c.day));
+  let cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+
+  if (!completedDays.has(dateKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  let streak = 0;
+
+  while (completedDays.has(dateKey(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+}
+
+function updatePrayerStreak(){
+  const streak = getPrayerStreak();
+  $("prayerStreak").textContent = streak;
+
+  $("streakMessage").textContent = streak === 0
+    ? "Your journey starts with one prayer."
+    : streak === 1
+    ? "You've started building consistency. Keep going!"
+    : "You've shown up for God " + streak + " days in a row. Keep going!";
+}
 function escapeHTML(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400)}
 function showView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("selected",b.dataset.view===id));if(id==="historyView")renderHistory();if(id==="journalView")renderJournals();if(id==="settingsView")renderSettings();window.scrollTo({top:0,behavior:"smooth"})}
@@ -57,7 +86,7 @@ async function init(){
 }
 function isDone(id,day=dateKey()){return data.checkins.some(c=>c.id===id&&c.day===day)}
 function renderPrayerList(){const host=$("prayerList");if(!data.schedule.length){host.innerHTML='<div class="empty-state">Your prayer rhythm starts with one moment.<br>Open Settings to add a prayer time.</div>'}else{host.innerHTML=[...data.schedule].sort((a,b)=>a.time.localeCompare(b.time)).map(p=>`<div class="prayer-row"><div class="prayer-icon">♡</div><div class="prayer-info"><strong>${escapeHTML(p.name)}</strong><small>${formatTime(p.time)}</small></div><button class="check-button ${isDone(p.id)?"done":""}" data-check="${p.id}">${isDone(p.id)?"✓ Checked in":"Check in"}</button></div>`).join("")}
-host.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>checkIn(b.dataset.check));const done=data.schedule.filter(p=>isDone(p.id)).length,total=data.schedule.length;$("progressText").textContent=`${done} of ${total} completed`;$("progressBar").style.width=(total?done/total*100:0)+"%";$("progressEncouragement").textContent=total&&done===total?"You've made room for every moment today. Grace for tomorrow, too.":done?"Every moment of turning toward God matters.":"Small, faithful moments matter."}
+host.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>checkIn(b.dataset.check));const done=data.schedule.filter(p=>isDone(p.id)).length,total=data.schedule.length;$("progressText").textContent=`${done} of ${total} completed`;$("progressBar").style.width=(total?done/total*100:0)+"%";$("progressEncouragement").textContent=total&&done===total?"You've made room for every moment today. Grace for tomorrow, too.":done?"Every moment of turning toward God matters.":"Small, faithful moments matter.";updatePrayerStreak()}
 function formatTime(t){const [h,m]=t.split(":").map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
 function checkIn(id){const p=data.schedule.find(x=>x.id===id);if(!p)return;if(!isDone(id)){data.checkins.push({id,day:dateKey(),at:new Date().toISOString()});saveData();renderPrayerList();$("sessionTitle").textContent=p.name;$("sessionPrompt").textContent="You've made space for this moment. Breathe, pray honestly, and be present.";$("sessionTitle").dataset.prayerId=id;showView("prayerView");toast("Prayer check-in saved. Take your time.")}else toast("You've already checked in for this moment today.")}
 $("startTimer").onclick=()=>{if(timerInterval){clearInterval(timerInterval);timerInterval=null;$("startTimer").textContent="Resume prayer";return}timerInterval=setInterval(()=>{timerSeconds++;$("timer").textContent=String(Math.floor(timerSeconds/60)).padStart(2,"0")+":"+String(timerSeconds%60).padStart(2,"0")},1000);$("startTimer").textContent="Pause timer"};
