@@ -58,7 +58,9 @@ function updatePrayerStreak(){
 function escapeHTML(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400)}
 function showView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("selected",b.dataset.view===id));if(id==="historyView")renderHistory();if(id==="journalView")renderJournals();if(id==="settingsView")renderSettings();window.scrollTo({top:0,behavior:"smooth"})}
-document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+document.querySelectorAll(".nav-item[data-view]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+$("journeyShortcut").onclick=()=>showView("historyView");
+$("settingsShortcut").onclick=()=>showView("settingsView");
 $("settingsBtn").onclick=()=>showView("settingsView");$("manageSchedule").onclick=()=>showView("settingsView");$("quickJournal").onclick=()=>{showView("journalView");$("journalBody").focus()};
 async function init(){
   try {
