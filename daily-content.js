@@ -95,7 +95,20 @@
     }
   }
 
-  function extractVerse(payload) {
+  
+function extractVerse(payload) {
+  const verse = payload && payload.random_verse;
+
+  if (!verse || !verse.text || !verse.book) {
+    return null;
+  }
+
+  return {
+    text: verse.text.trim(),
+    ref: `${verse.book} ${verse.chapter}:${verse.verse}`
+  };
+}
+
     let verse = null;
 
     if (Array.isArray(payload.verses) && payload.verses.length) {
