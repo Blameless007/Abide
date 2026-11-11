@@ -244,6 +244,215 @@
 
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      window.addEventListener("load", () => {
+        const VERSION_KEY = "abide.asset-version.v2";
+
+        const ASSETS_TO_CHECK = [
+          "./index.html",
+          "./styles.css",
+          "./audio.css",
+          "./records.css",
+          "./db.js",
+          "./daily-content.js",
+          "./app.js",
+          "./audio.js",
+          "./records.js",
+          "./manifest.webmanifest",
+          "./icon.svg",
+          "./sw.js"
+        ];
+
+        let registration = null;
+        let checking = false;
+        let reloadStarted = false;
+        let updateDetected = false;
+
+        function isSafeToReload() {
+          const prayerView = document.getElementById("prayerView");
+          const journalView = document.getElementById("journalView");
+          const journalTitle = document.getElementById("journalTitle");
+          const journalBody = document.getElementById("journalBody");
+          const startTimer = document.getElementById("startTimer");
+
+          if (prayerView && prayerView.classList.contains("active")) {
+            return false;
+          }
+
+          if (journalView && journalView.classList.contains("active")) {
+            return false;
+          }
+
+          if (journalTitle && journalTitle.value.trim()) return false;
+          if (journalBody && journalBody.value.trim()) return false;
+
+          if (startTimer && startTimer.textContent.trim() === "Pause timer") {
+            return false;
+          }
+
+          return true;
+        }
+
+        function reloadWhenSafe() {
+          if (!updateDetected || reloadStarted || !isSafeToReload()) {
+            return;
+          }
+
+          reloadStarted = true;
+          window.location.reload();
+        }
+
+        async function fingerprint(text) {
+          if (window.crypto && crypto.subtle) {
+            const bytes = new TextEncoder().encode(text);
+            const digest = await crypto.subtle.digest("SHA-256", bytes);
+
+            return Array.from(new Uint8Array(digest))
+              .map(byte => byte.toString(16).padStart(2, "0"))
+              .join("");
+          }
+
+          let hash = 2166136261;
+
+          for (let i = 0; i < text.length; i++) {
+            hash ^= text.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+          }
+
+          return (hash >>> 0).toString(16);
+        }
+
+        async function checkAppFiles() {
+          if (!navigator.onLine || checking || reloadStarted) return;
+
+          checking = true;
+
+          try {
+            const versions = await Promise.all(
+              ASSETS_TO_CHECK.map(async (path, index) => {
+                const response = await fetch(
+                  path + "?abide-check=" + Date.now() + "-" + index,
+                  { cache: "no-store" }
+                );
+
+                if (!response.ok) {
+                  throw new Error("Could not check " + path);
+                }
+
+                return path + ":" +
+                  await fingerprint(await response.text());
+              })
+            );
+
+            const currentVersion = await fingerprint(
+              versions.join("|")
+            );
+
+            const previousVersion = localStorage.getItem(VERSION_KEY);
+
+            if (previousVersion && previousVersion !== currentVersion) {
+              localStorage.setItem(VERSION_KEY, currentVersion);
+              updateDetected = true;
+              reloadWhenSafe();
+
+            } else if (!previousVersion) {
+              localStorage.setItem(VERSION_KEY, currentVersion);
+            }
+
+          } catch (error) {
+            console.warn("Abide file update check failed:", error);
+
+          } finally {
+            checking = false;
+          }
+        }
+
+        function checkForUpdates() {
+          if (!navigator.onLine) return;
+
+          if (registration) {
+            registration.update().catch(error => {
+              console.warn("Service worker update check failed:", error);
+            });
+
+            if (registration.waiting && isSafeToReload()) {
+              registration.waiting.postMessage({
+                type: "ABIDE_SKIP_WAITING"
+              });
+            }
+          }
+
+          checkAppFiles();
+          reloadWhenSafe();
+        }
+
+        navigator.serviceWorker.addEventListener(
+          "controllerchange",
+          () => {
+            updateDetected = true;
+            reloadWhenSafe();
+          }
+        );
+
+        navigator.serviceWorker.register("./sw.js", {
+          updateViaCache: "none"
+        }).then(reg => {
+          registration = reg;
+
+          checkForUpdates();
+
+          window.addEventListener("online", checkForUpdates);
+          window.addEventListener("focus", checkForUpdates);
+          window.addEventListener("pageshow", checkForUpdates);
+
+          document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+              checkForUpdates();
+            }
+          });
+
+          setInterval(checkForUpdates, 5 * 60 * 1000);
+
+          document.addEventListener("click", () => {
+            window.setTimeout(() => {
+              if (
+                registration &&
+                registration.waiting &&
+                isSafeToReload()
+              ) {
+                registration.waiting.postMessage({
+                  type: "ABIDE_SKIP_WAITING"
+                });
+              }
+
+              reloadWhenSafe();
+            }, 300);
+          });
+
+        }).catch(error => {
+          console.error(
+            "Abide service worker registration failed:",
+            error
+          );
+        });
+      });
+    }
+  </script>
+</body>
+</html>
+/div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="./db.js"></script>
+  <script src="./daily-content.js"></script>
+  <script src="./app.js"></script>
+  <script src="./audio.js"></script>
+  <script src="./records.js"></script>
+
+  <script>
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
       window.addEventListener("load", async () => {
         const hadController = !!navigator.serviceWorker.controller;
 
