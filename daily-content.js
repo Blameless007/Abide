@@ -1,3 +1,4 @@
+
 /* ABIDE 2.0 — DAILY CONTENT
    365-day welcome-message cycle.
    KJV Scripture is fetched once per day and saved locally for offline use.
@@ -5,9 +6,9 @@
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "abide.daily.scriptures.v1";
+  const STORAGE_KEY = "abide.daily.scriptures.v2";
 
-  // 25 opening sentences x 15 closing sentences = 375 unique messages.
+  // 25 opening sentences x 15 closing sentences = 375 unique combinations.
   // The first 365 combinations are used in the 365-day cycle.
   const openings = [
     "Begin this day with a quiet confidence in God.",
@@ -57,8 +58,13 @@
 
   function getDayIndex(date) {
     const dayNumber = Math.floor(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      ) / 86400000
     );
+
     return ((dayNumber % 365) + 365) % 365;
   }
 
@@ -66,37 +72,64 @@
     const index = getDayIndex(date);
     const opening = openings[Math.floor(index / endings.length)];
     const ending = endings[index % endings.length];
+
     return opening + " " + ending;
   }
 
   function readSavedData() {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      const saved = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "null"
+      );
+
       if (!saved || typeof saved !== "object") {
-        return { daily: {}, usedReferences: [] };
+        return {
+          daily: {},
+          usedReferences: []
+        };
       }
 
       return {
-        daily: saved.daily && typeof saved.daily === "object" ? saved.daily : {},
+        daily:
+          saved.daily && typeof saved.daily === "object"
+            ? saved.daily
+            : {},
+
         usedReferences: Array.isArray(saved.usedReferences)
           ? saved.usedReferences
           : []
       };
+
     } catch (error) {
-      console.warn("Abide could not read saved daily Scriptures:", error);
-      return { daily: {}, usedReferences: [] };
+      console.warn(
+        "Abide could not read saved daily Scriptures:",
+        error
+      );
+
+      return {
+        daily: {},
+        usedReferences: []
+      };
     }
   }
 
   function saveData(data) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+      );
     } catch (error) {
-      console.warn("Abide could not save daily Scripture:", error);
+      console.warn(
+        "Abide could not save daily Scripture:",
+        error
+      );
     }
   }
 
-  // API response: { random_verse: { book, chapter, verse, text } }
+  // API response:
+  // { random_verse: { book, chapter, verse, text } }
+
   function extractVerse(payload) {
     const verse = payload && payload.random_verse;
 
@@ -108,7 +141,11 @@
       !verse.chapter ||
       !verse.verse
     ) {
-      console.error("Abide: Invalid KJV API response:", payload);
+      console.error(
+        "Abide: Invalid KJV API response:",
+        payload
+      );
+
       return null;
     }
 
@@ -121,25 +158,41 @@
   async function fetchKJVVerse(usedReferences) {
     const response = await fetch(
       "https://bible-api.com/data/kjv/random",
-      { cache: "no-store" }
+      {
+        cache: "no-store"
+      }
     );
 
     if (!response.ok) {
-      throw new Error(`KJV service returned HTTP ${response.status}`);
+      throw new Error(
+        `KJV service returned HTTP ${response.status}`
+      );
     }
 
     const payload = await response.json();
-    console.log("Abide KJV API response:", payload);
+
+    console.log(
+      "Abide KJV API response:",
+      payload
+    );
 
     const verse = extractVerse(payload);
-    console.log("Abide extracted Scripture:", verse);
+
+    console.log(
+      "Abide extracted Scripture:",
+      verse
+    );
 
     if (!verse) {
-      throw new Error("The KJV API response could not be read.");
+      throw new Error(
+        "The KJV API response could not be read."
+      );
     }
 
     const alreadyUsed = usedReferences.some(
-      ref => String(ref).toLowerCase() === verse.ref.toLowerCase()
+      ref =>
+        String(ref).toLowerCase() ===
+        verse.ref.toLowerCase()
     );
 
     return alreadyUsed ? null : verse;
@@ -155,43 +208,64 @@
     const data = readSavedData();
     const welcome = getWelcomeMessage(date);
 
+    // Keep the same Scripture throughout the current day.
     if (
       data.daily[today] &&
       data.daily[today].text &&
       data.daily[today].ref
     ) {
-      return { welcome, scripture: data.daily[today] };
+      return {
+        welcome,
+        scripture: data.daily[today]
+      };
     }
 
-    // Try up to eight times to avoid a reference already used on this device.
+    // Try up to eight times to avoid a previously used reference.
     for (let attempt = 0; attempt < 8; attempt++) {
       try {
-        const verse = await fetchKJVVerse(data.usedReferences);
+        const verse = await fetchKJVVerse(
+          data.usedReferences
+        );
+
         if (!verse) continue;
 
         data.daily[today] = verse;
         data.usedReferences.push(verse.ref);
+
         saveData(data);
 
-        return { welcome, scripture: verse };
+        return {
+          welcome,
+          scripture: verse
+        };
+
       } catch (error) {
-        console.warn("Abide daily Scripture fetch failed:", error);
+        console.warn(
+          "Abide daily Scripture fetch failed:",
+          error
+        );
+
         break;
       }
     }
 
-    // Offline fallback: most recently saved Scripture, then app.js fallback.
+    // Offline fallback: most recently saved Scripture,
+    // then the fallback supplied by app.js.
     const savedDates = Object.keys(data.daily).sort().reverse();
+
     const mostRecentSavedVerse = savedDates.length
       ? data.daily[savedDates[0]]
       : null;
 
     return {
       welcome,
-      scripture: mostRecentSavedVerse || fallbackVerse || {
-        text: "Be still, and know that I am God.",
-        ref: "Psalm 46:10"
-      }
+
+      scripture:
+        mostRecentSavedVerse ||
+        fallbackVerse || {
+          text: "Be still, and know that I am God.",
+          ref: "Psalm 46:10"
+        }
     };
   }
 
@@ -199,4 +273,5 @@
     getForDate,
     getWelcomeMessage
   };
+
 })();
