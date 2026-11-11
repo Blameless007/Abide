@@ -28,16 +28,6 @@ let timerInterval = null;
 
 const $ = id => document.getElementById(id);
 
-function loadData(){
-  try{
-    return {...defaults,...JSON.parse(localStorage.getItem(KEY)||"{}")};
-  }catch{
-    return structuredClone(defaults);
-  }
-}
-
-let saveQueue = Promise.resolve();
-
 function saveData(){
   localStorage.setItem(KEY, JSON.stringify(data));
   const snapshot = structuredClone(data);
@@ -51,6 +41,8 @@ function saveData(){
 
   return saveQueue;
 }
+
+let saveQueue = Promise.resolve();
 
 function dateKey(d=new Date()){
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -154,7 +146,6 @@ async function init(){
     {weekday:"short",month:"short",day:"numeric"}
   );
 
-  // Load the daily welcome message and Scripture.
   try{
     const dayNumber = Math.floor(
       Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()) / 86400000
@@ -361,6 +352,183 @@ function renderJournals(){
   $("journalEntries").querySelectorAll("[data-delete]").forEach(b=>
     b.onclick=()=>{
       if(confirm("Delete this reflection? This cannot be undone.")){
+        data.journals=data.journals.filter(j=>j.id!==b.dataset.delete);
+        saveData();
+        renderJournals();
+        renderHistory();
+      }
+    }
+  );
+}
+
+function renderHistory(){
+  $("totalCheckins").textContent=data.checkins.length;
+  $("totalJournals").textContent=data.journals.length;
+
+  const days=[];
+
+  for(let i=6;i>=0;i--){
+    const d=new Date();
+    d.setDate(d.getDate()-i);
+    const key=dateKey(d);
+
+    days.push({
+      label:d.toLocaleDateString([],{weekday:"short"}),
+      count:data.checkins.filter(c=>c.day===key).length
+    });
+  }
+
+  const max=Math.max(1,...days.map(d=>d.count));
+
+  $("weekBars").innerHTML=days.map(d=>`
+    <div class="week-day">
+      <i style="height:${Math.max(4,d.count/max*72)}px"></i>
+      <small>${d.label}</small>
+    </div>
+  `).join("");
+}
+
+function renderSettings(){
+  $("settingsSchedule").innerHTML=data.schedule.length
+    ?[...data.schedule]
+      .sort((a,b)=>a.time.localeCompare(b.time))
+      .map(p=>`
+        <div class="schedule-setting">
+          <strong>${escapeHTML(p.name)}</strong>
+          <time>${formatTime(p.time)}</time>
+          <button data-edit="${p.id}" aria-label="Edit ${escapeHTML(p.name)}">✎</button>
+          <button data-remove="${p.id}" aria-label="Remove ${escapeHTML(p.name)}">×</button>
+        </div>
+      `).join("")
+    :'<div class="empty-state">No prayer moments yet. Add one to begin.</div>';
+
+  $("settingsSchedule").querySelectorAll("[data-edit]").forEach(b=>
+    b.onclick=()=>openPrayerModal(b.dataset.edit)
+  );
+
+  $("settingsSchedule").querySelectorAll("[data-remove]").forEach(b=>
+    b.onclick=()=>{
+      if(confirm("Remove this prayer time? Your past check-ins will remain in your history.")){
+        data.schedule=data.schedule.filter(p=>p.id!==b.dataset.remove);
+        saveData();
+        renderSettings();
+        renderPrayerList();
+      }
+    }
+  );
+}
+
+function openPrayerModal(id=null){
+  editingPrayerId=id;
+  const p=data.schedule.find(x=>x.id===id);
+
+  $("prayerModalTitle").textContent=p?"Edit prayer moment":"Add a prayer moment";
+  $("prayerName").value=p?.name||"";
+  $("prayerTime").value=p?.time||"06:00";
+  $("prayerModal").hidden=false;
+}
+
+$("addPrayer").onclick=()=>openPrayerModal();
+
+$("prayerForm").onsubmit=e=>{
+  e.preventDefault();
+
+  const name=$("prayerName").value.trim();
+  const time=$("prayerTime").value;
+
+  if(!name||!time)return;
+
+  if(editingPrayerId){
+    const p=data.schedule.find(x=>x.id===editingPrayerId);
+    if(p){
+      p.name=name;
+      p.time=time;
+    }
+  }else{
+    data.schedule.push({
+      id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),
+      name,
+      time
+    });
+  }
+
+  saveData();
+  $("prayerModal").hidden=true;
+  renderSettings();
+  renderPrayerList();
+  toast("Your prayer rhythm has been updated.");
+};
+
+document.querySelectorAll("[data-close]").forEach(b=>
+  b.onclick=()=>$(b.dataset.close).hidden=true
+);
+
+$("prayerModal").addEventListener("click",e=>{
+  if(e.target===$("prayerModal")){
+    $("prayerModal").hidden=true;
+  }
+});
+
+function downloadBackup(){
+  const blob=new Blob([
+    JSON.stringify({
+      exportedAt:new Date().toISOString(),
+      ...data
+    },null,2)
+  ],{type:"application/json"});
+
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+
+  a.href=url;
+  a.download="abide-backup-"+dateKey()+".json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+  toast("Your backup is ready.");
+}
+
+$("downloadBackup").onclick=downloadBackup;
+$("exportData").onclick=downloadBackup;
+
+$("testMigration").onclick=async()=>{
+  try{
+    const result=await window.AbideDB.migrateLegacyData();
+
+    if(result.alreadyMigrated){
+      toast("Migration was already completed.");
+    }else if(result.noLegacyData){
+      toast("No previous data found.");
+    }else{
+      toast(`Copied ${result.schedules} schedules, ${result.checkins} check-ins and ${result.journals} journal entries.`);
+    }
+  }catch(error){
+    console.error(error);
+    toast("Migration failed. Your original data is still safe.");
+  }
+};
+
+$("clearData").onclick=()=>{
+  if(confirm("This permanently clears your prayer schedule, check-ins, and journal from this browser. Download a backup first if you want to keep them.")){
+    data={
+      ...structuredClone(defaults),
+      schedule:[],
+      checkins:[],
+      journals:[]
+    };
+
+    saveData();
+    renderSettings();
+    renderPrayerList();
+    renderJournals();
+    renderHistory();
+
+    toast("Your personal prayer data has been cleared.");
+  }
+};
+
+init();
+te this reflection? This cannot be undone.")){
         data.journals=data.journals.filter(j=>j.id!==b.dataset.delete);
         saveData();
         renderJournals();
