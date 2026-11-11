@@ -1,4 +1,5 @@
-const CACHE = "abide-shell-v10";
+
+const CACHE = "abide-shell-v11";
 
 const ASSETS = [
   "./",
