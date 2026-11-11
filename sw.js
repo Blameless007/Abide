@@ -1,5 +1,5 @@
 
-const CACHE = "abide-shell-v11";
+const CACHE = "abide-shell-v12";
 
 const ASSETS = [
   "./",
@@ -16,40 +16,38 @@ const ASSETS = [
   "./icon.svg"
 ];
 
-// Install the latest app files.
+// Cache the current app files when a new worker is installed.
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE)
-      .then(cache => {
-        return cache.addAll(
-          ASSETS.map(path =>
-            new Request(path, { cache: "reload" })
-          )
-        );
-      })
-      .then(() => self.skipWaiting())
+      .then(cache => cache.addAll(
+        ASSETS.map(path => new Request(path, { cache: "reload" }))
+      ))
   );
 });
 
-// Activate the new version immediately.
+// Activate only when the page approves it.
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "ABIDE_SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys =>
-        Promise.all(
-          keys
-            .filter(key =>
-              key.startsWith("abide-shell-") &&
-              key !== CACHE
-            )
-            .map(key => caches.delete(key))
-        )
-      )
+      .then(keys => Promise.all(
+        keys
+          .filter(key =>
+            key.startsWith("abide-shell-") && key !== CACHE
+          )
+          .map(key => caches.delete(key))
+      ))
       .then(() => self.clients.claim())
   );
 });
 
-// Prefer internet; use cached files when offline.
+// Network-first while online; use saved files offline.
 self.addEventListener("fetch", event => {
   const request = event.request;
 
@@ -59,8 +57,16 @@ self.addEventListener("fetch", event => {
 
   if (url.origin !== self.location.origin) return;
 
+  // Version checks must bypass the app cache.
+  if (url.searchParams.has("abide-check")) {
+    event.respondWith(
+      fetch(request, { cache: "no-store" })
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(request, { cache: "no-cache" })
+    fetch(request, { cache: "no-store" })
       .then(response => {
         if (response.ok) {
           const copy = response.clone();
