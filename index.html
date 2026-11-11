@@ -192,14 +192,12 @@
           <h1>More</h1>
           <p class="subtle">Your progress and other app options.</p>
         </div>
-
         <article class="settings-card">
           <p class="eyebrow">YOUR GROWTH</p>
           <h2>Your journey</h2>
           <p class="subtle">Look back on your prayer consistency and reflections.</p>
           <button class="secondary-button wide" id="journeyShortcut">View your journey</button>
         </article>
-
         <article class="settings-card">
           <p class="eyebrow">PERSONALISE ABIDE</p>
           <h2>Settings</h2>
@@ -266,6 +264,7 @@
         let checking = false;
         let reloadStarted = false;
         let updateDetected = false;
+        const hadController = !!navigator.serviceWorker.controller;
 
         function isSafeToReload() {
           const prayerView = document.getElementById("prayerView");
@@ -274,14 +273,8 @@
           const journalBody = document.getElementById("journalBody");
           const startTimer = document.getElementById("startTimer");
 
-          if (prayerView && prayerView.classList.contains("active")) {
-            return false;
-          }
-
-          if (journalView && journalView.classList.contains("active")) {
-            return false;
-          }
-
+          if (prayerView && prayerView.classList.contains("active")) return false;
+          if (journalView && journalView.classList.contains("active")) return false;
           if (journalTitle && journalTitle.value.trim()) return false;
           if (journalBody && journalBody.value.trim()) return false;
 
@@ -293,17 +286,15 @@
         }
 
         function reloadWhenSafe() {
-          if (!updateDetected || reloadStarted || !isSafeToReload()) {
-            return;
-          }
+          if (!updateDetected || reloadStarted || !isSafeToReload()) return;
 
           reloadStarted = true;
           window.location.reload();
         }
 
-        async function fingerprint(text) {
+        async function fingerprint(value) {
           if (window.crypto && crypto.subtle) {
-            const bytes = new TextEncoder().encode(text);
+            const bytes = new TextEncoder().encode(value);
             const digest = await crypto.subtle.digest("SHA-256", bytes);
 
             return Array.from(new Uint8Array(digest))
@@ -313,8 +304,8 @@
 
           let hash = 2166136261;
 
-          for (let i = 0; i < text.length; i++) {
-            hash ^= text.charCodeAt(i);
+          for (let i = 0; i < value.length; i++) {
+            hash ^= value.charCodeAt(i);
             hash = Math.imul(hash, 16777619);
           }
 
@@ -338,31 +329,37 @@
                   throw new Error("Could not check " + path);
                 }
 
-                return path + ":" +
-                  await fingerprint(await response.text());
+                return path + ":" + await fingerprint(await response.text());
               })
             );
 
-            const currentVersion = await fingerprint(
-              versions.join("|")
-            );
-
+            const currentVersion = await fingerprint(versions.join("|"));
             const previousVersion = localStorage.getItem(VERSION_KEY);
 
             if (previousVersion && previousVersion !== currentVersion) {
-              localStorage.setItem(VERSION_KEY, currentVersion);
               updateDetected = true;
               reloadWhenSafe();
-
-            } else if (!previousVersion) {
-              localStorage.setItem(VERSION_KEY, currentVersion);
             }
+
+            localStorage.setItem(VERSION_KEY, currentVersion);
 
           } catch (error) {
             console.warn("Abide file update check failed:", error);
 
           } finally {
             checking = false;
+          }
+        }
+
+        function activateWaitingWorkerWhenSafe() {
+          if (
+            registration &&
+            registration.waiting &&
+            isSafeToReload()
+          ) {
+            registration.waiting.postMessage({
+              type: "ABIDE_SKIP_WAITING"
+            });
           }
         }
 
@@ -374,29 +371,36 @@
               console.warn("Service worker update check failed:", error);
             });
 
-            if (registration.waiting && isSafeToReload()) {
-              registration.waiting.postMessage({
-                type: "ABIDE_SKIP_WAITING"
-              });
-            }
+            activateWaitingWorkerWhenSafe();
           }
 
           checkAppFiles();
           reloadWhenSafe();
         }
 
-        navigator.serviceWorker.addEventListener(
-          "controllerchange",
-          () => {
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (hadController) {
             updateDetected = true;
             reloadWhenSafe();
           }
-        );
+        });
 
         navigator.serviceWorker.register("./sw.js", {
           updateViaCache: "none"
         }).then(reg => {
           registration = reg;
+
+          registration.addEventListener("updatefound", () => {
+            const installingWorker = registration.installing;
+
+            if (!installingWorker) return;
+
+            installingWorker.addEventListener("statechange", () => {
+              if (installingWorker.state === "installed" && hadController) {
+                activateWaitingWorkerWhenSafe();
+              }
+            });
+          });
 
           checkForUpdates();
 
@@ -405,93 +409,21 @@
           window.addEventListener("pageshow", checkForUpdates);
 
           document.addEventListener("visibilitychange", () => {
-            if (!document.hidden) {
-              checkForUpdates();
-            }
+            if (!document.hidden) checkForUpdates();
           });
 
           setInterval(checkForUpdates, 5 * 60 * 1000);
 
           document.addEventListener("click", () => {
             window.setTimeout(() => {
-              if (
-                registration &&
-                registration.waiting &&
-                isSafeToReload()
-              ) {
-                registration.waiting.postMessage({
-                  type: "ABIDE_SKIP_WAITING"
-                });
-              }
-
+              activateWaitingWorkerWhenSafe();
               reloadWhenSafe();
             }, 300);
           });
 
         }).catch(error => {
-          console.error(
-            "Abide service worker registration failed:",
-            error
-          );
+          console.error("Abide service worker registration failed:", error);
         });
-      });
-    }
-  </script>
-</body>
-</html>
-/div>
-    </form>
-  </div>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script src="./db.js"></script>
-  <script src="./daily-content.js"></script>
-  <script src="./app.js"></script>
-  <script src="./audio.js"></script>
-  <script src="./records.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      window.addEventListener("load", async () => {
-        const hadController = !!navigator.serviceWorker.controller;
-
-        try {
-          const registration = await navigator.serviceWorker.register(
-            "./sw.js",
-            { updateViaCache: "none" }
-          );
-
-          registration.update().catch(() => {});
-
-          window.addEventListener("online", () => {
-            registration.update().catch(() => {});
-          });
-
-          window.addEventListener("focus", () => {
-            registration.update().catch(() => {});
-          });
-
-          document.addEventListener("visibilitychange", () => {
-            if (!document.hidden) {
-              registration.update().catch(() => {});
-            }
-          });
-
-          setInterval(() => {
-            registration.update().catch(() => {});
-          }, 5 * 60 * 1000);
-
-          if (hadController) {
-            navigator.serviceWorker.addEventListener(
-              "controllerchange",
-              () => window.location.reload(),
-              { once: true }
-            );
-          }
-        } catch (error) {
-          console.error("Abide update check failed:", error);
-        }
       });
     }
   </script>
