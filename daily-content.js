@@ -6,7 +6,6 @@
 (function () {
   "use strict";
 
-  // v3 starts a fresh daily Scripture cache.
   const STORAGE_KEY = "abide.daily.scriptures.v3";
 
   const openings = [
@@ -166,7 +165,6 @@
     }
 
     const payload = await response.json();
-
     const verse = extractVerse(payload);
 
     if (!verse) {
@@ -194,7 +192,6 @@
     const data = readSavedData();
     const welcome = getWelcomeMessage(date);
 
-    // Keep the same Scripture throughout the current day.
     if (
       data.daily[today] &&
       data.daily[today].text &&
@@ -206,7 +203,6 @@
       };
     }
 
-    // Try up to eight times to avoid a previously used reference.
     for (let attempt = 0; attempt < 8; attempt++) {
       try {
         const verse = await fetchKJVVerse(
@@ -235,8 +231,6 @@
       }
     }
 
-    // Offline fallback: most recently saved Scripture,
-    // then the fallback supplied by app.js.
     const savedDates = Object.keys(data.daily).sort().reverse();
 
     const mostRecentSavedVerse = savedDates.length
