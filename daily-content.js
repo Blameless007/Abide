@@ -6,10 +6,9 @@
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "abide.daily.scriptures.v2";
+  // v3 starts a fresh daily Scripture cache.
+  const STORAGE_KEY = "abide.daily.scriptures.v3";
 
-  // 25 opening sentences x 15 closing sentences = 375 unique combinations.
-  // The first 365 combinations are used in the 365-day cycle.
   const openings = [
     "Begin this day with a quiet confidence in God.",
     "Approach today with prayer before pressure.",
@@ -127,9 +126,6 @@
     }
   }
 
-  // API response:
-  // { random_verse: { book, chapter, verse, text } }
-
   function extractVerse(payload) {
     const verse = payload && payload.random_verse;
 
@@ -171,17 +167,7 @@
 
     const payload = await response.json();
 
-    console.log(
-      "Abide KJV API response:",
-      payload
-    );
-
     const verse = extractVerse(payload);
-
-    console.log(
-      "Abide extracted Scripture:",
-      verse
-    );
 
     if (!verse) {
       throw new Error(
