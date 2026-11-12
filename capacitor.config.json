@@ -1,0 +1,7 @@
+
+{
+  "appId": "com.abide.app",
+  "appName": "Abide",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
