@@ -1,10 +1,11 @@
 
-const CACHE = "abide-shell-v12";
+const CACHE = "abide-shell-v13";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
+  "./redesign.css",
   "./audio.css",
   "./records.css",
   "./db.js",
