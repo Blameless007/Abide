@@ -1,0 +1,133 @@
+
+/* ABIDE — PRAYER TIMER AND NOTIFICATION CONTROLS */
+
+.prayer-session-options {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 390px;
+  margin: 22px auto 0;
+  text-align: left;
+}
+
+.prayer-session-options label {
+  margin-top: 7px;
+  color: #765F52;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.prayer-session-options select {
+  width: 100%;
+  min-height: 47px;
+  padding: 11px 13px;
+  border: 1px solid #E7D7CA;
+  border-radius: 11px;
+  background: rgba(255,255,255,.88);
+  color: #263C31;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.prayer-session-options select:focus {
+  border-color: #C47A5A;
+  box-shadow: 0 0 0 3px rgba(196,122,90,.12);
+}
+
+#prayerView .timer {
+  display: block;
+  width: fit-content;
+  min-width: 205px;
+  margin: 25px auto 5px;
+  padding: 13px 18px;
+  border-top: 1px solid #E8D9CF;
+  border-bottom: 1px solid #E8D9CF;
+  color: #152C26;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(42px, 11vw, 58px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.timer-mode-label {
+  margin: 8px 0 20px;
+  color: #8B786B;
+  font-size: 10px;
+  text-align: center;
+}
+
+#prayerView .session-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+#prayerView .session-actions button {
+  min-width: 0;
+  width: 100%;
+}
+
+#prayerView #finishPrayer {
+  grid-column: 1 / -1;
+  border-color: #D7E2D7;
+  background: #EAF1E8;
+  color: #1F3F36;
+}
+
+#prayerView #resetTimer {
+  border-color: #E6D9CE;
+  background: #FFFEFC;
+  color: #785F50;
+}
+
+#prayerView #timerStatus {
+  min-height: 30px;
+  margin-top: 15px;
+  color: #82776C;
+  font-size: 10px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+.notification-settings {
+  border-color: #E6DFD1;
+}
+
+.notification-settings #togglePrayerNotifications {
+  margin-top: 8px;
+  border-color: #D9E3D8;
+  background: #EDF3EA;
+  color: #1F3F36;
+}
+
+.notification-settings #togglePrayerNotifications:disabled {
+  opacity: .55;
+}
+
+.notification-settings #notificationStatus {
+  margin: 12px 0 0;
+  color: #66756B;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.notification-limit-note {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #EAE5DB;
+  color: #91877A;
+  font-size: 9px;
+  line-height: 1.7;
+}
+
+@media (max-width: 420px) {
+  #prayerView .session-actions {
+    grid-template-columns: 1fr;
+  }
+
+  #prayerView #finishPrayer {
+    grid-column: auto;
+  }
+}
