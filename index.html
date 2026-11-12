@@ -85,18 +85,50 @@
           <h1>Prayer time</h1>
           <p class="subtle">A moment to turn your attention toward God.</p>
         </div>
-        <div class="session-card">
-          <div class="session-orbit">✦</div>
-          <p class="eyebrow">YOUR QUIET MOMENT</p>
-          <h2 id="sessionTitle">Be still</h2>
-          <p id="sessionPrompt">Take a breath. You are not here to perform; you are here to be present.</p>
-          <div class="timer" id="timer">00:00</div>
-          <div class="session-actions">
-            <button class="primary-button" id="startTimer">Begin prayer</button>
-            <button class="secondary-button" id="finishPrayer">Complete check-in</button>
-          </div>
-          <p class="tiny-note">You can pray for as long as you need. The timer is simply a gentle aid.</p>
-        </div>
+        
+<div class="session-card">
+  <div class="session-orbit">✦</div>
+  <p class="eyebrow">YOUR QUIET MOMENT</p>
+  <h2 id="sessionTitle">Be still</h2>
+  <p id="sessionPrompt">Take a breath. You are not here to perform; you are here to be present.</p>
+
+  <div class="prayer-session-options">
+    <label for="prayerMomentSelect">Prayer moment</label>
+    <select id="prayerMomentSelect">
+      <option value="personal-prayer">Personal prayer</option>
+    </select>
+
+    <label for="prayerDuration">Prayer duration</label>
+    <select id="prayerDuration">
+      <option value="0">No timer — count upward</option>
+      <option value="5">5 minutes</option>
+      <option value="10">10 minutes</option>
+      <option value="15">15 minutes</option>
+      <option value="20">20 minutes</option>
+      <option value="30">30 minutes</option>
+      <option value="45">45 minutes</option>
+      <option value="60">1 hour</option>
+      <option value="90">1 hour 30 minutes</option>
+      <option value="120">2 hours</option>
+    </select>
+  </div>
+
+  <div class="timer" id="timer">00:00</div>
+  <p class="timer-mode-label" id="timerModeLabel">Elapsed time · No timer</p>
+
+  <div class="session-actions">
+    <button class="primary-button" id="startTimer" type="button">Start prayer</button>
+    <button class="secondary-button" id="resetTimer" type="button">Reset timer</button>
+    <button class="secondary-button" id="finishPrayer" type="button">Complete check-in</button>
+  </div>
+
+  <p id="timerStatus" role="status" aria-live="polite">
+    Choose a duration or leave the timer off to count upward.
+  </p>
+
+  <p class="tiny-note">The timer is optional. Complete your check-in when you finish praying.</p>
+</div>
+
         <div class="reflection-prompt">
           <span>♡</span>
           <div>
