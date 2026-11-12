@@ -1,11 +1,12 @@
 
-const CACHE = "abide-shell-v14";
+const CACHE = "abide-shell-v15";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./redesign.css",
+  "./prayer-controls.css",
   "./audio.css",
   "./records.css",
   "./db.js",
@@ -17,7 +18,6 @@ const ASSETS = [
   "./icon.svg"
 ];
 
-// Install the new app shell and its assets.
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE).then(cache =>
@@ -30,17 +30,12 @@ self.addEventListener("install", event => {
   );
 });
 
-// The page controls when the waiting worker activates.
 self.addEventListener("message", event => {
-  if (
-    event.data &&
-    event.data.type === "ABIDE_SKIP_WAITING"
-  ) {
+  if(event.data?.type==="ABIDE_SKIP_WAITING"){
     self.skipWaiting();
   }
 });
 
-// Remove older Abide shell caches after activation.
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
@@ -49,52 +44,76 @@ self.addEventListener("activate", event => {
           keys
             .filter(key =>
               key.startsWith("abide-shell-") &&
-              key !== CACHE
+              key!==CACHE
             )
-            .map(key => caches.delete(key))
+            .map(key=>caches.delete(key))
         )
       )
-      .then(() => self.clients.claim())
+      .then(()=>self.clients.claim())
   );
 });
 
-// Network-first while online; cached files are the offline fallback.
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  const prayerId=event.notification.data?.prayerId;
+
+  event.waitUntil(
+    self.clients.matchAll({
+      type:"window",
+      includeUncontrolled:true
+    }).then(clientList=>{
+      for(const client of clientList){
+        if("focus" in client){
+          client.postMessage({
+            type:"ABIDE_OPEN_PRAYER",
+            prayerId
+          });
+
+          return client.focus();
+        }
+      }
+
+      return self.clients.openWindow("./");
+    })
+  );
+});
+
 self.addEventListener("fetch", event => {
-  const request = event.request;
+  const request=event.request;
 
-  if (request.method !== "GET") return;
+  if(request.method!=="GET")return;
 
-  const url = new URL(request.url);
+  const url=new URL(request.url);
 
-  if (url.origin !== self.location.origin) return;
+  if(url.origin!==self.location.origin)return;
 
-  // App version checks must always reach the network.
-  if (url.searchParams.has("abide-check")) {
+  if(url.searchParams.has("abide-check")){
     event.respondWith(
-      fetch(request, { cache: "no-store" })
+      fetch(request,{cache:"no-store"})
     );
     return;
   }
 
   event.respondWith(
-    fetch(request, { cache: "no-store" })
-      .then(response => {
-        if (response.ok) {
-          const copy = response.clone();
+    fetch(request,{cache:"no-store"})
+      .then(response=>{
+        if(response.ok){
+          const copy=response.clone();
 
-          caches.open(CACHE).then(cache =>
-            cache.put(request, copy)
+          caches.open(CACHE).then(cache=>
+            cache.put(request,copy)
           );
         }
 
         return response;
       })
-      .catch(async () => {
-        const cached = await caches.match(request);
+      .catch(async()=>{
+        const cached=await caches.match(request);
 
-        if (cached) return cached;
+        if(cached)return cached;
 
-        if (request.mode === "navigate") {
+        if(request.mode==="navigate"){
           return caches.match("./index.html");
         }
 
