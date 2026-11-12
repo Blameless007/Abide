@@ -21,10 +21,23 @@ const defaults = {
   journals:[]
 };
 
+const PERSONAL_PRAYER_ID = "personal-prayer";
+const NOTIFICATION_ENABLED_KEY = "abide.prayer-notifications.enabled";
+const NOTIFICATION_LAST_CHECK_KEY = "abide.prayer-notifications.last-check";
+
 let data = structuredClone(defaults);
 let editingPrayerId = null;
-let timerSeconds = 0;
+let saveQueue = Promise.resolve();
+
 let timerInterval = null;
+let timerRunning = false;
+let timerCompleted = false;
+let timerDurationSeconds = 0;
+let timerElapsedSeconds = 0;
+let timerStartedAt = null;
+
+let reminderInterval = null;
+let lastReminderCheck = Date.now();
 
 const $ = id => document.getElementById(id);
 
@@ -41,8 +54,6 @@ function saveData(){
 
   return saveQueue;
 }
-
-let saveQueue = Promise.resolve();
 
 function dateKey(d=new Date()){
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -96,8 +107,13 @@ function toast(msg){
 }
 
 function showView(id){
-  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));
-  document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("selected",b.dataset.view===id));
+  document.querySelectorAll(".view").forEach(v=>
+    v.classList.toggle("active",v.id===id)
+  );
+
+  document.querySelectorAll(".nav-item").forEach(b=>
+    b.classList.toggle("selected",b.dataset.view===id)
+  );
 
   if(id==="historyView")renderHistory();
   if(id==="journalView")renderJournals();
@@ -107,7 +123,13 @@ function showView(id){
 }
 
 document.querySelectorAll(".nav-item[data-view]").forEach(b=>
-  b.addEventListener("click",()=>showView(b.dataset.view))
+  b.addEventListener("click",()=>{
+    if(b.dataset.view==="prayerView"){
+      preparePrayerSession();
+    }
+
+    showView(b.dataset.view);
+  })
 );
 
 $("journeyShortcut").onclick=()=>showView("historyView");
@@ -115,17 +137,30 @@ $("settingsShortcut").onclick=()=>showView("settingsView");
 $("bibleTab").onclick=()=>window.location.href="https://www.bible.com/";
 $("settingsBtn").onclick=()=>showView("settingsView");
 $("manageSchedule").onclick=()=>showView("settingsView");
+
 $("quickJournal").onclick=()=>{
   showView("journalView");
   $("journalBody").focus();
 };
 
+/* ---------- APP INITIALISATION ---------- */
+
 async function init(){
   try{
     const stored = await window.AbideDB.loadAppData();
-    data = {...defaults,...(stored || {})};
+
+    data = {
+      ...structuredClone(defaults),
+      ...(stored || {})
+    };
+
+    data.schedule = Array.isArray(data.schedule) ? data.schedule : [];
+    data.checkins = Array.isArray(data.checkins) ? data.checkins : [];
+    data.journals = Array.isArray(data.journals) ? data.journals : [];
+
     await window.AbideDB.saveAppData(data);
     localStorage.setItem(KEY,JSON.stringify(data));
+
   }catch(error){
     console.error(error);
     toast("Unable to load saved data. Please reload.");
@@ -182,22 +217,48 @@ async function init(){
   renderPrayerList();
   renderJournals();
   renderHistory();
+  preparePrayerSession();
+  renderReminderSettings();
+  startReminderChecking();
 
   $("journalBody").addEventListener("input",()=>{
     $("wordCount").textContent =
       ($("journalBody").value.trim().match(/\S+/g)||[]).length+" words";
   });
+
+  $("prayerMomentSelect").addEventListener("change",()=>{
+    updateSelectedPrayerMoment();
+  });
+
+  $("prayerDuration").addEventListener("change",()=>{
+    resetTimer();
+    updateTimerModeLabel();
+    $("timerStatus").textContent =
+      "Timer setting updated. Start when you're ready.";
+  });
+
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.addEventListener("message",event=>{
+      if(event.data?.type==="ABIDE_OPEN_PRAYER"){
+        preparePrayerSession(event.data.prayerId);
+        showView("prayerView");
+      }
+    });
+  }
 }
 
+/* ---------- CHECK-IN AND STREAK ---------- */
+
 function isDone(id,day=dateKey()){
-  return data.checkins.some(c=>c.id===id&&c.day===day);
+  return data.checkins.some(c=>c.id===id && c.day===day);
 }
 
 function renderPrayerList(){
   const host=$("prayerList");
 
   if(!data.schedule.length){
-    host.innerHTML='<div class="empty-state">Your prayer rhythm starts with one moment.<br>Open Settings to add a prayer time.</div>';
+    host.innerHTML =
+      '<div class="empty-state">Your prayer rhythm starts with one moment.<br>Open Settings to add a prayer time.</div>';
   }else{
     host.innerHTML=[...data.schedule]
       .sort((a,b)=>a.time.localeCompare(b.time))
@@ -208,7 +269,7 @@ function renderPrayerList(){
             <strong>${escapeHTML(p.name)}</strong>
             <small>${formatTime(p.time)}</small>
           </div>
-          <button class="check-button ${isDone(p.id)?"done":""}" data-check="${p.id}">
+          <button class="check-button ${isDone(p.id)?"done":""}" data-check="${escapeHTML(p.id)}">
             ${isDone(p.id)?"✓ Checked in":"Check in"}
           </button>
         </div>
@@ -216,7 +277,7 @@ function renderPrayerList(){
   }
 
   host.querySelectorAll("[data-check]").forEach(b=>
-    b.onclick=()=>checkIn(b.dataset.check)
+    b.onclick=()=>openPrayerSession(b.dataset.check)
   );
 
   const done=data.schedule.filter(p=>isDone(p.id)).length;
@@ -237,15 +298,72 @@ function renderPrayerList(){
 
 function formatTime(t){
   const [h,m]=t.split(":").map(Number);
+
   return new Date(2000,0,1,h,m).toLocaleTimeString(
     [],
     {hour:"numeric",minute:"2-digit"}
   );
 }
 
-function checkIn(id){
-  const p=data.schedule.find(x=>x.id===id);
-  if(!p)return;
+/*
+  Home's Check in button now opens the Prayer screen.
+  It does not save a check-in yet.
+  The check-in is saved only when Complete check-in is pressed.
+*/
+
+function openPrayerSession(id){
+  preparePrayerSession(id);
+  showView("prayerView");
+
+  if(isDone(id)){
+    toast("You've already checked in for this prayer moment today. You can still pray.");
+  }
+}
+
+function preparePrayerSession(preferredId=null){
+  const select=$("prayerMomentSelect");
+  const previousValue=select.value;
+
+  const options = [
+    `<option value="${PERSONAL_PRAYER_ID}">Personal prayer</option>`,
+    ...[...data.schedule]
+      .sort((a,b)=>a.time.localeCompare(b.time))
+      .map(p=>`<option value="${escapeHTML(p.id)}">${escapeHTML(p.name)}</option>`)
+  ];
+
+  select.innerHTML=options.join("");
+
+  const validIds = new Set([
+    PERSONAL_PRAYER_ID,
+    ...data.schedule.map(p=>p.id)
+  ]);
+
+  const chosenId =
+    preferredId && validIds.has(preferredId)
+      ? preferredId
+      : previousValue && validIds.has(previousValue)
+      ? previousValue
+      : data.schedule[0]?.id || PERSONAL_PRAYER_ID;
+
+  select.value=chosenId;
+  updateSelectedPrayerMoment();
+}
+
+function updateSelectedPrayerMoment(){
+  const id=$("prayerMomentSelect").value;
+  const prayer=data.schedule.find(p=>p.id===id);
+
+  $("sessionTitle").textContent=prayer ? prayer.name : "Personal prayer";
+
+  $("sessionPrompt").textContent=prayer
+    ? "You've made space for this moment. Breathe, pray honestly, and be present."
+    : "Take a breath. You are not here to perform; you are here to be present.";
+
+  $("sessionTitle").dataset.prayerId=id;
+}
+
+function completePrayerCheckIn(){
+  const id=$("prayerMomentSelect").value || PERSONAL_PRAYER_ID;
 
   if(!isDone(id)){
     data.checkins.push({
@@ -255,50 +373,345 @@ function checkIn(id){
     });
 
     saveData();
+
     renderPrayerList();
+    renderHistory();
+    updatePrayerStreak();
 
-    $("sessionTitle").textContent=p.name;
-    $("sessionPrompt").textContent="You've made space for this moment. Breathe, pray honestly, and be present.";
-    $("sessionTitle").dataset.prayerId=id;
-
-    showView("prayerView");
-    toast("Prayer check-in saved. Take your time.");
+    toast("Prayer check-in saved. Your streak has been updated.");
   }else{
-    toast("You've already checked in for this moment today.");
+    toast("This prayer moment is already checked in for today.");
+  }
+
+  stopTimerAndReset();
+  showView("homeView");
+}
+
+/* ---------- FLEXIBLE PRAYER TIMER ---------- */
+
+function formatTimer(seconds){
+  seconds=Math.max(0,Math.floor(seconds));
+
+  const hours=Math.floor(seconds/3600);
+  const minutes=Math.floor((seconds%3600)/60);
+  const remainingSeconds=seconds%60;
+
+  if(hours>0){
+    return [
+      String(hours).padStart(2,"0"),
+      String(minutes).padStart(2,"0"),
+      String(remainingSeconds).padStart(2,"0")
+    ].join(":");
+  }
+
+  return (
+    String(minutes).padStart(2,"0")+":"+
+    String(remainingSeconds).padStart(2,"0")
+  );
+}
+
+function getCurrentTimerElapsed(){
+  if(!timerRunning || timerStartedAt===null){
+    return timerElapsedSeconds;
+  }
+
+  return timerElapsedSeconds +
+    Math.floor((Date.now()-timerStartedAt)/1000);
+}
+
+function updateTimerDisplay(){
+  const elapsed=getCurrentTimerElapsed();
+
+  if(timerDurationSeconds>0){
+    const remaining=Math.max(0,timerDurationSeconds-elapsed);
+    $("timer").textContent=formatTimer(remaining);
+  }else{
+    $("timer").textContent=formatTimer(elapsed);
   }
 }
 
-$("startTimer").onclick=()=>{
-  if(timerInterval){
+function updateTimerModeLabel(){
+  const minutes=Number($("prayerDuration").value || 0);
+
+  $("timerModeLabel").textContent=minutes>0
+    ? `Countdown · ${minutes>=60 ? (minutes/60)+" hour"+(minutes===60?"":"s") : minutes+" minutes"}`
+    : "Elapsed time · No timer";
+}
+
+function startTimer(){
+  if(timerRunning){
+    timerElapsedSeconds=getCurrentTimerElapsed();
+    timerStartedAt=null;
+    timerRunning=false;
+
     clearInterval(timerInterval);
     timerInterval=null;
+
     $("startTimer").textContent="Resume prayer";
+    $("timerStatus").textContent="Prayer timer paused.";
+    updateTimerDisplay();
     return;
   }
 
-  timerInterval=setInterval(()=>{
-    timerSeconds++;
-    $("timer").textContent=
-      String(Math.floor(timerSeconds/60)).padStart(2,"0")+":"+
-      String(timerSeconds%60).padStart(2,"0");
-  },1000);
-
-  $("startTimer").textContent="Pause timer";
-};
-
-$("finishPrayer").onclick=()=>{
-  if(timerInterval){
-    clearInterval(timerInterval);
-    timerInterval=null;
+  if(timerCompleted){
+    timerElapsedSeconds=0;
+    timerCompleted=false;
   }
 
-  timerSeconds=0;
-  $("timer").textContent="00:00";
-  $("startTimer").textContent="Begin prayer";
+  timerDurationSeconds=Number($("prayerDuration").value || 0)*60;
+  timerStartedAt=Date.now();
+  timerRunning=true;
 
-  toast("Thank you for making room for prayer.");
-  showView("homeView");
+  $("startTimer").textContent="Pause prayer";
+  $("timerStatus").textContent=timerDurationSeconds>0
+    ? "Your prayer countdown is running."
+    : "Your prayer time is being counted upward.";
+
+  clearInterval(timerInterval);
+  timerInterval=setInterval(tickTimer,1000);
+
+  updateTimerDisplay();
+}
+
+function tickTimer(){
+  updateTimerDisplay();
+
+  if(
+    timerDurationSeconds>0 &&
+    getCurrentTimerElapsed()>=timerDurationSeconds
+  ){
+    timerElapsedSeconds=timerDurationSeconds;
+    timerStartedAt=null;
+    timerRunning=false;
+    timerCompleted=true;
+
+    clearInterval(timerInterval);
+    timerInterval=null;
+
+    $("timer").textContent=formatTimer(0);
+    $("startTimer").textContent="Start again";
+    $("timerStatus").textContent="Your prayer time is complete. You can continue praying or complete your check-in.";
+
+    notifyTimerFinished();
+  }
+}
+
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerInterval=null;
+
+  timerRunning=false;
+  timerCompleted=false;
+  timerElapsedSeconds=0;
+  timerStartedAt=null;
+  timerDurationSeconds=Number($("prayerDuration").value || 0)*60;
+
+  $("startTimer").textContent="Start prayer";
+  $("timer").textContent=timerDurationSeconds>0
+    ? formatTimer(timerDurationSeconds)
+    : "00:00";
+
+  updateTimerModeLabel();
+}
+
+function stopTimerAndReset(){
+  resetTimer();
+  $("timerStatus").textContent =
+    "Choose a duration or leave the timer off to count upward.";
+}
+
+$("startTimer").onclick=startTimer;
+$("resetTimer").onclick=()=>{
+  resetTimer();
+  $("timerStatus").textContent="Timer reset.";
 };
+$("finishPrayer").onclick=completePrayerCheckIn;
+
+/* ---------- NOTIFICATIONS ---------- */
+
+function remindersEnabled(){
+  return localStorage.getItem(NOTIFICATION_ENABLED_KEY)==="true";
+}
+
+function renderReminderSettings(){
+  const button=$("togglePrayerNotifications");
+  const status=$("notificationStatus");
+
+  if(!("Notification" in window)){
+    button.disabled=true;
+    button.textContent="Notifications unavailable";
+    status.textContent="This browser does not support notifications.";
+    return;
+  }
+
+  if(Notification.permission==="denied"){
+    button.disabled=true;
+    button.textContent="Notifications blocked";
+    status.textContent="Notifications are blocked by your browser. Change the permission in your device or browser settings.";
+    return;
+  }
+
+  if(remindersEnabled() && Notification.permission==="granted"){
+    button.disabled=false;
+    button.textContent="Turn prayer notifications off";
+    status.textContent="Prayer reminders are enabled for your saved schedule.";
+  }else{
+    button.disabled=false;
+    button.textContent="Enable prayer notifications";
+    status.textContent=Notification.permission==="granted"
+      ? "Permission granted. Turn reminders on when you're ready."
+      : "Notifications are currently off.";
+  }
+}
+
+$("togglePrayerNotifications").onclick=async()=>{
+  if(!("Notification" in window)){
+    toast("Notifications are not supported by this browser.");
+    return;
+  }
+
+  if(remindersEnabled()){
+    localStorage.setItem(NOTIFICATION_ENABLED_KEY,"false");
+    renderReminderSettings();
+    toast("Prayer reminders turned off.");
+    return;
+  }
+
+  try{
+    const permission=await Notification.requestPermission();
+
+    if(permission==="granted"){
+      localStorage.setItem(NOTIFICATION_ENABLED_KEY,"true");
+      lastReminderCheck=Date.now();
+      localStorage.setItem(NOTIFICATION_LAST_CHECK_KEY,String(lastReminderCheck));
+
+      renderReminderSettings();
+      toast("Prayer reminders enabled.");
+    }else{
+      localStorage.setItem(NOTIFICATION_ENABLED_KEY,"false");
+      renderReminderSettings();
+      toast("Notification permission was not granted.");
+    }
+  }catch(error){
+    console.error("Notification permission error:",error);
+    toast("Unable to enable notifications in this browser.");
+  }
+};
+
+async function showAbideNotification(title,options={}){
+  if(!("Notification" in window) || Notification.permission!=="granted"){
+    return;
+  }
+
+  try{
+    if("serviceWorker" in navigator){
+      const registration=await navigator.serviceWorker.ready;
+
+      if(registration && registration.showNotification){
+        await registration.showNotification(title,{
+          body:options.body || "",
+          icon:"./icon.svg",
+          badge:"./icon.svg",
+          tag:options.tag || "abide-notification",
+          renotify:false,
+          data:options.data || {}
+        });
+
+        return;
+      }
+    }
+
+    const notification=new Notification(title,{
+      body:options.body || "",
+      icon:"./icon.svg",
+      tag:options.tag || "abide-notification"
+    });
+
+    notification.onclick=()=>{
+      window.focus();
+
+      if(options.data?.prayerId){
+        openPrayerSession(options.data.prayerId);
+      }
+
+      notification.close();
+    };
+
+  }catch(error){
+    console.warn("Could not display notification:",error);
+  }
+}
+
+function notifyTimerFinished(){
+  showAbideNotification("Your prayer time is complete",{
+    body:"Your selected prayer duration has ended. Take your time, and complete your check-in when you're ready.",
+    tag:"abide-prayer-timer-complete"
+  });
+}
+
+function startReminderChecking(){
+  if(reminderInterval){
+    clearInterval(reminderInterval);
+  }
+
+  lastReminderCheck=Date.now();
+
+  reminderInterval=setInterval(()=>{
+    checkPrayerReminders();
+  },15000);
+}
+
+function checkPrayerReminders(){
+  const now=new Date();
+  const nowTime=now.getTime();
+
+  if(!remindersEnabled() || !("Notification" in window)){
+    lastReminderCheck=nowTime;
+    return;
+  }
+
+  if(Notification.permission!=="granted"){
+    localStorage.setItem(NOTIFICATION_ENABLED_KEY,"false");
+    renderReminderSettings();
+    lastReminderCheck=nowTime;
+    return;
+  }
+
+  const day=dateKey(now);
+
+  data.schedule.forEach(prayer=>{
+    const [hour,minute]=prayer.time.split(":").map(Number);
+
+    const scheduled=new Date(now);
+    scheduled.setHours(hour,minute,0,0);
+
+    const scheduledTime=scheduled.getTime();
+    const reminderKey=`abide.reminder.sent.${prayer.id}.${day}`;
+    const alreadySent=localStorage.getItem(reminderKey)==="true";
+
+    const crossedScheduledTime =
+      scheduledTime>lastReminderCheck &&
+      scheduledTime<=nowTime;
+
+    const stillRecent =
+      nowTime-scheduledTime<=2*60*1000;
+
+    if(crossedScheduledTime && stillRecent && !alreadySent){
+      localStorage.setItem(reminderKey,"true");
+
+      showAbideNotification(`It's time for ${prayer.name}`,{
+        body:`Your scheduled prayer moment is now. Take a moment to be still and present.`,
+        tag:`abide-prayer-${prayer.id}-${day}`,
+        data:{prayerId:prayer.id}
+      });
+    }
+  });
+
+  lastReminderCheck=nowTime;
+  localStorage.setItem(NOTIFICATION_LAST_CHECK_KEY,String(nowTime));
+}
+
+/* ---------- JOURNAL ---------- */
 
 $("journalForm").onsubmit=e=>{
   e.preventDefault();
@@ -342,7 +755,7 @@ function renderJournals(){
               })}
             </span>
           </div>
-          <button class="delete-entry" data-delete="${j.id}">Delete</button>
+          <button class="delete-entry" data-delete="${escapeHTML(j.id)}">Delete</button>
         </div>
         <p class="entry-body">${escapeHTML(j.body)}</p>
       </article>
@@ -360,6 +773,8 @@ function renderJournals(){
     }
   );
 }
+
+/* ---------- JOURNEY / HISTORY ---------- */
 
 function renderHistory(){
   $("totalCheckins").textContent=data.checkins.length;
@@ -388,6 +803,8 @@ function renderHistory(){
   `).join("");
 }
 
+/* ---------- SETTINGS / PRAYER SCHEDULE ---------- */
+
 function renderSettings(){
   $("settingsSchedule").innerHTML=data.schedule.length
     ?[...data.schedule]
@@ -396,8 +813,8 @@ function renderSettings(){
         <div class="schedule-setting">
           <strong>${escapeHTML(p.name)}</strong>
           <time>${formatTime(p.time)}</time>
-          <button data-edit="${p.id}" aria-label="Edit ${escapeHTML(p.name)}">✎</button>
-          <button data-remove="${p.id}" aria-label="Remove ${escapeHTML(p.name)}">×</button>
+          <button data-edit="${escapeHTML(p.id)}" aria-label="Edit ${escapeHTML(p.name)}">✎</button>
+          <button data-remove="${escapeHTML(p.id)}" aria-label="Remove ${escapeHTML(p.name)}">×</button>
         </div>
       `).join("")
     :'<div class="empty-state">No prayer moments yet. Add one to begin.</div>';
@@ -413,9 +830,12 @@ function renderSettings(){
         saveData();
         renderSettings();
         renderPrayerList();
+        preparePrayerSession();
       }
     }
   );
+
+  renderReminderSettings();
 }
 
 function openPrayerModal(id=null){
@@ -440,6 +860,7 @@ $("prayerForm").onsubmit=e=>{
 
   if(editingPrayerId){
     const p=data.schedule.find(x=>x.id===editingPrayerId);
+
     if(p){
       p.name=name;
       p.time=time;
@@ -454,8 +875,11 @@ $("prayerForm").onsubmit=e=>{
 
   saveData();
   $("prayerModal").hidden=true;
+
   renderSettings();
   renderPrayerList();
+  preparePrayerSession();
+
   toast("Your prayer rhythm has been updated.");
 };
 
@@ -468,6 +892,8 @@ $("prayerModal").addEventListener("click",e=>{
     $("prayerModal").hidden=true;
   }
 });
+
+/* ---------- BACKUP / DATA MANAGEMENT ---------- */
 
 function downloadBackup(){
   const blob=new Blob([
@@ -518,10 +944,12 @@ $("clearData").onclick=()=>{
     };
 
     saveData();
+
     renderSettings();
     renderPrayerList();
     renderJournals();
     renderHistory();
+    preparePrayerSession();
 
     toast("Your personal prayer data has been cleared.");
   }
