@@ -1,5 +1,5 @@
 
-const CACHE = "abide-shell-v13";
+const CACHE = "abide-shell-v14";
 
 const ASSETS = [
   "./",
@@ -17,38 +17,48 @@ const ASSETS = [
   "./icon.svg"
 ];
 
-// Cache the current app files when a new worker is installed.
+// Install the new app shell and its assets.
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(
-        ASSETS.map(path => new Request(path, { cache: "reload" }))
-      ))
+    caches.open(CACHE).then(cache =>
+      cache.addAll(
+        ASSETS.map(path =>
+          new Request(path, { cache: "reload" })
+        )
+      )
+    )
   );
 });
 
-// Activate only when the page approves it.
+// The page controls when the waiting worker activates.
 self.addEventListener("message", event => {
-  if (event.data && event.data.type === "ABIDE_SKIP_WAITING") {
+  if (
+    event.data &&
+    event.data.type === "ABIDE_SKIP_WAITING"
+  ) {
     self.skipWaiting();
   }
 });
 
+// Remove older Abide shell caches after activation.
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys
-          .filter(key =>
-            key.startsWith("abide-shell-") && key !== CACHE
-          )
-          .map(key => caches.delete(key))
-      ))
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key =>
+              key.startsWith("abide-shell-") &&
+              key !== CACHE
+            )
+            .map(key => caches.delete(key))
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
 
-// Network-first while online; use saved files offline.
+// Network-first while online; cached files are the offline fallback.
 self.addEventListener("fetch", event => {
   const request = event.request;
 
@@ -58,7 +68,7 @@ self.addEventListener("fetch", event => {
 
   if (url.origin !== self.location.origin) return;
 
-  // Version checks must bypass the app cache.
+  // App version checks must always reach the network.
   if (url.searchParams.has("abide-check")) {
     event.respondWith(
       fetch(request, { cache: "no-store" })
