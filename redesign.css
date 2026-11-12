@@ -1,0 +1,374 @@
+
+/* ABIDE — VISUAL REDESIGN
+   Visual-only overrides.
+   Existing application functionality is preserved. */
+
+:root {
+  --forest: #152c26;
+  --forest2: #1f3f36;
+  --sage: #e2ebe2;
+  --sage2: #edf1e9;
+  --cream: #fbf9f4;
+  --paper: #f7f5f0;
+  --ink: #0f1412;
+  --muted: #737d75;
+  --line: #e8e6de;
+  --gold: #d4b896;
+  --terracotta: #c47a5a;
+  --terracotta-dark: #a35f45;
+  --danger: #a94e46;
+  --shadow: 0 14px 36px rgba(21, 44, 38, .075);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--cream);
+}
+
+body {
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-shell {
+  background: var(--cream);
+}
+
+.topbar {
+  min-height: 72px;
+  padding-inline: clamp(18px, 5vw, 30px);
+  background: rgba(251, 249, 244, .94);
+  border-color: var(--line);
+}
+
+.brand {
+  gap: 11px;
+  color: var(--forest);
+  font-size: 27px;
+  letter-spacing: -.8px;
+}
+
+.brand > span:last-child {
+  font-weight: 500;
+}
+
+.brand-dot {
+  color: var(--terracotta) !important;
+}
+
+/* New abstract rooted-growth brand mark */
+.brand-mark {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  overflow: hidden;
+  border-radius: 11px;
+  background: var(--forest);
+  color: transparent !important;
+  font-size: 0 !important;
+  font-style: normal !important;
+}
+
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 9px;
+  width: 2px;
+  height: 18px;
+  border-radius: 2px;
+  background: #f7f5f0;
+}
+
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 7px;
+  width: 18px;
+  height: 12px;
+  border: 2px solid var(--terracotta);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+}
+
+.date-label,
+.eyebrow {
+  letter-spacing: .15em;
+}
+
+.eyebrow {
+  color: #7d8980;
+  font-size: 10px;
+}
+
+.welcome {
+  padding: 24px 2px 28px;
+}
+
+.welcome h1,
+.page-heading h1 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(42px, 11vw, 54px);
+  line-height: 1.03;
+  letter-spacing: -1.5px;
+}
+
+.welcome h1 em {
+  color: var(--terracotta);
+}
+
+.subtle {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.verse-card {
+  background: var(--forest);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  padding: 25px 24px 23px;
+  box-shadow: 0 16px 38px rgba(21,44,38,.13);
+}
+
+.verse-top {
+  color: #d6e0d8;
+}
+
+.verse-ref {
+  color: #e4b69d;
+}
+
+.verse-card blockquote {
+  color: #fffdf8;
+  font-size: clamp(21px, 5.3vw, 25px);
+  line-height: 1.42;
+}
+
+.verse-note {
+  color: #c1cec5;
+}
+
+.section-heading {
+  margin-top: 28px;
+}
+
+.section-heading h2,
+.settings-card h2,
+.history-card h2 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -.35px;
+}
+
+.text-button {
+  color: var(--terracotta-dark);
+  font-weight: 650;
+}
+
+.daily-progress {
+  background: #f1f2e9;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+}
+
+.progress-track {
+  background: #dfe4da;
+}
+
+.progress-track span {
+  background: var(--terracotta);
+}
+
+.primary-button {
+  background: var(--forest);
+  color: #fffdf8;
+  border: 1px solid var(--forest);
+  border-radius: 12px;
+  min-height: 48px;
+  font-weight: 650;
+  box-shadow: 0 5px 14px rgba(21,44,38,.12);
+}
+
+.primary-button:hover {
+  background: var(--forest2);
+}
+
+.secondary-button {
+  background: #fffefa;
+  color: var(--forest);
+  border: 1px solid #d8ded5;
+  border-radius: 12px;
+  min-height: 46px;
+}
+
+.danger-button {
+  border-radius: 12px;
+}
+
+.session-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 27px 22px;
+}
+
+.session-orbit {
+  background: var(--sage);
+  color: var(--terracotta-dark);
+  border: 1px solid #d8e2d8;
+}
+
+.session-card h2 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 30px;
+}
+
+.timer {
+  color: var(--forest);
+}
+
+.reflection-prompt {
+  background: #f1f2e9;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+}
+
+.journal-form,
+.settings-card,
+.history-card {
+  background: #fffefa;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 20px;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid #dedfd7 !important;
+  border-radius: 11px !important;
+  background: #fffefa !important;
+  color: var(--ink) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid rgba(196,122,90,.22);
+  border-color: var(--terracotta) !important;
+}
+
+label {
+  color: var(--forest);
+}
+
+.privacy-note,
+.tiny-note {
+  color: var(--muted);
+}
+
+.bottom-nav {
+  background: rgba(251,249,244,.97);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 28px rgba(21,44,38,.045);
+  min-height: 76px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-item {
+  color: #89928b;
+}
+
+.nav-item.selected {
+  color: var(--forest);
+}
+
+.nav-item.selected span {
+  color: var(--terracotta-dark);
+}
+
+.nav-item small {
+  font-weight: 600;
+}
+
+.modal-backdrop {
+  backdrop-filter: blur(5px);
+}
+
+.modal {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--cream);
+  box-shadow: 0 22px 60px rgba(15,20,18,.18);
+}
+
+.modal h2 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+}
+
+.modal-close {
+  color: var(--muted);
+}
+
+.toast {
+  background: var(--forest);
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+/* Existing Personal Records interface */
+.record-card {
+  background: #fffefa;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+}
+
+.record-category {
+  color: var(--terracotta-dark);
+  background: #f7ebe5;
+}
+
+.record-status-line strong {
+  color: var(--forest);
+}
+
+.empty-state {
+  border: 1px dashed #d9ddd4;
+  border-radius: 15px;
+  background: #f7f5f0;
+  color: var(--muted);
+}
+
+@media (min-width: 700px) {
+  .app-shell {
+    box-shadow: 0 0 50px rgba(21,44,38,.045);
+  }
+}
+
+@media (max-width: 380px) {
+  main {
+    padding-inline: 18px;
+  }
+
+  .topbar {
+    padding-inline: 18px;
+  }
+
+  .date-label {
+    display: none;
+  }
+}
