@@ -1,192 +1,126 @@
 
-/* ABIDE — COMPLETE VISUAL REDESIGN
-   Visual-only overrides.
-   Existing functionality and lowercase-a logo are preserved.
-   Audio styling is not modified. */
+/* =========================================================
+   ABIDE — SCREEN-BY-SCREEN VISUAL REDESIGN
+   Version: 2.0
+   Visual layer only. Existing app functionality is preserved.
+   Existing lowercase-a logo is preserved.
+   Audio files and styling are not modified.
+   ========================================================= */
 
 :root {
-  /* Core design palette */
   --forest: #152C26;
-  --forest2: #1F3F36;
+  --forest-mid: #1F3F36;
+  --forest-light: #31594B;
   --terracotta: #C47A5A;
   --terracotta-dark: #A35F45;
   --cream: #FBF9F4;
   --paper: #F7F5F0;
+  --white: #FFFFFF;
   --sage: #E2EBE2;
-  --sage2: #F0F4EF;
+  --sage-light: #F0F4EF;
   --gold: #D4B896;
-  --ink: #0F1412;
+  --rose: #F4E9E5;
+  --rose-dark: #A96F65;
+  --lavender: #EEEAF5;
+  --lavender-dark: #786A98;
+  --ink: #17211C;
   --muted: #6B756E;
   --line: #DCE3DA;
   --danger: #A85A52;
-  --white: #FFFFFF;
 
-  /* Spacing scale */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 18px;
+  --radius-xl: 23px;
 
-  /* Corner radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-
-  --shadow: 0 10px 28px rgba(21,44,38,.055);
+  --shadow-soft: 0 8px 24px rgba(21,44,38,.055);
+  --shadow-card: 0 12px 32px rgba(21,44,38,.075);
 }
+
+/* ---------- GLOBAL FOUNDATION ---------- */
 
 * {
   box-sizing: border-box;
 }
 
-html,
-body {
-  min-height: 100%;
-  background: var(--cream);
-}
-
 html {
   scroll-behavior: smooth;
+  background: var(--cream);
 }
 
 body {
-  color: var(--ink);
   background: var(--cream);
-  font-family: Inter, ui-sans-serif, system-ui,
-    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 14px;
-  line-height: 1.55;
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app-shell {
   width: 100%;
   max-width: 680px;
   min-height: 100vh;
-  margin-inline: auto;
-  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  margin: 0 auto;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
   background: var(--cream);
 }
 
-/* TOP BAR */
-
-.topbar {
-  min-height: 72px;
-  padding: 10px clamp(18px, 5vw, 30px);
-  background: rgba(251,249,244,.97);
-  border-bottom: 1px solid var(--line);
-}
-
-.brand {
-  gap: 11px;
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 27px;
-  letter-spacing: -.8px;
-}
-
-.brand > span:last-child {
-  font-weight: 500;
-}
-
-/* Existing lowercase-a logo retained */
-.brand-mark {
-  position: relative;
-  color: var(--white);
-  background: var(--forest);
-}
-
-.brand-dot {
-  color: var(--terracotta) !important;
-}
-
-.top-actions {
-  gap: 10px;
-}
-
-.date-label {
-  color: var(--muted);
-  font-size: 10px;
-  letter-spacing: .12em;
-}
-
-.streak-badge {
-  display: inline-flex;
-  min-height: 32px;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 10px;
-  border: 1px solid #E9D9C9;
-  border-radius: 999px;
-  background: #F8EEE7;
-  color: var(--terracotta-dark);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.icon-button {
-  border-color: var(--line);
-  background: var(--white);
-  color: var(--forest);
-}
-
-/* PAGE TYPOGRAPHY */
-
 main {
-  padding: 26px clamp(18px, 5vw, 28px) 34px;
+  padding: 25px clamp(18px, 5vw, 28px) 36px;
+}
+
+.view {
+  animation: abide-enter .28s ease both;
+}
+
+@keyframes abide-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
-  margin-bottom: 10px;
   color: var(--muted);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .14em;
-}
-
-.welcome {
-  padding: 24px 2px 28px;
-}
-
-.welcome h1,
-.page-heading h1 {
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(38px, 9vw, 48px);
-  font-weight: 400;
-  line-height: 1.06;
-  letter-spacing: -1.2px;
-}
-
-.welcome h1 em {
-  color: var(--terracotta-dark);
-  font-weight: 400;
-}
-
-.page-heading {
-  margin: 8px 0 26px;
-}
-
-.page-heading h1 {
-  font-size: clamp(30px, 7vw, 38px);
-  letter-spacing: -.8px;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .17em;
+  line-height: 1.5;
+  margin: 0 0 10px;
 }
 
 .subtle {
   color: var(--muted);
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.75;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+.page-heading {
+  margin: 7px 0 26px;
+  padding: 5px 1px 0;
+}
+
+.page-heading h1 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 8vw, 43px);
+  font-weight: 400;
+  letter-spacing: -1.1px;
+  line-height: 1.1;
+  margin: 0 0 9px;
 }
 
 .section-heading {
-  margin-top: 30px;
-  margin-bottom: 14px;
+  align-items: end;
+  margin: 30px 0 15px;
 }
 
 .section-heading h2,
@@ -194,182 +128,1119 @@ main {
 .history-card h2 {
   color: var(--forest);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 400;
-  letter-spacing: -.35px;
+  letter-spacing: -.4px;
+  line-height: 1.25;
+  margin: 0;
 }
 
 .text-button {
   color: var(--terracotta-dark);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+/* ---------- TOP BAR ---------- */
+
+.topbar {
+  min-height: 72px;
+  padding: 10px clamp(18px, 5vw, 30px);
+  background: rgba(251,249,244,.96);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  gap: 10px;
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: -.8px;
+}
+
+/* Keep the existing lowercase-a mark. */
+.brand-mark {
+  background: var(--forest);
+  color: var(--white);
+}
+
+.brand-dot {
+  color: var(--terracotta) !important;
+}
+
+.top-actions {
+  gap: 9px;
+}
+
+.date-label {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: .1em;
+}
+
+.top-actions .streak-badge {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #E8D9C9;
+  border-radius: 999px;
+  background: #F8EEE7;
+  color: var(--terracotta-dark);
+}
+
+.top-actions .streak-badge span:first-child {
+  color: var(--terracotta-dark);
+  font-family: Georgia, serif;
+  font-size: 15px;
   font-weight: 700;
 }
 
-/* SCRIPTURE CARD */
-
-.verse-card {
-  margin-bottom: 30px;
-  padding: 24px;
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: var(--radius-xl);
-  background: var(--forest);
-  box-shadow: 0 12px 30px rgba(21,44,38,.1);
-}
-
-.verse-top {
-  color: #D8E2DA;
-  font-size: 9px;
-}
-
-.verse-ref {
-  color: #E7C7B4;
-}
-
-.verse-card blockquote {
-  max-width: 500px;
-  margin: 20px 0 14px;
-  color: #FFFEFA;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(21px,5vw,25px);
-  line-height: 1.45;
-}
-
-.verse-note {
-  color: #C7D2CA;
+.top-actions .streak-badge small {
   font-size: 11px;
 }
 
-/* PRAYER MOMENTS */
+.top-actions .streak-badge #streakMessage {
+  display: none;
+}
 
-.prayer-list {
+.icon-button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--forest);
+}
+
+/* =========================================================
+   HOME — WARM WELCOME / SCRIPTURE / DAILY RHYTHM
+   ========================================================= */
+
+#homeView .welcome {
+  position: relative;
+  overflow: hidden;
+  margin: 0 -28px 23px;
+  padding: 30px 28px 31px;
+  border-bottom: 1px solid #D7E2D7;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(255,255,255,.62), transparent 34%),
+    linear-gradient(145deg, #EAF0E7 0%, #DDE8DC 58%, #E8EEE4 100%);
+}
+
+#homeView .welcome::after {
+  content: "a";
+  position: absolute;
+  right: 17px;
+  bottom: -69px;
+  color: rgba(31,63,54,.055);
+  font-family: Georgia, serif;
+  font-size: 230px;
+  font-style: italic;
+  line-height: 1;
+  pointer-events: none;
+}
+
+#homeView .welcome-top {
+  position: relative;
+  z-index: 1;
+}
+
+#homeView .welcome .eyebrow {
+  color: #63796A;
+  margin-bottom: 15px;
+}
+
+#homeView .welcome h1 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(43px, 10vw, 57px);
+  font-weight: 400;
+  letter-spacing: -1.8px;
+  line-height: .99;
+  margin: 0 0 15px;
+}
+
+#homeView .welcome h1 em {
+  color: #718C76;
+  font-weight: 400;
+}
+
+#homeView .welcome .subtle {
+  max-width: 290px;
+  color: #607267;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Scripture becomes the visual anchor of Home. */
+
+#homeView .verse-card {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 32px;
+  padding: 24px 23px 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(212,184,150,.18), transparent 38%),
+    linear-gradient(145deg, #1F4036, #142C25);
+  box-shadow: var(--shadow-card);
+}
+
+#homeView .verse-card::after {
+  content: "✳";
+  position: absolute;
+  right: 8px;
+  bottom: -45px;
+  color: rgba(255,255,255,.055);
+  font-size: 145px;
+  pointer-events: none;
+}
+
+#homeView .verse-top {
+  position: relative;
+  z-index: 1;
+  color: #D5E0D7;
+  font-size: 9px;
+  letter-spacing: .13em;
+}
+
+#homeView .verse-ref {
+  color: #E8C8AD;
+  font-size: 10px;
+  letter-spacing: .02em;
+}
+
+#homeView .verse-card blockquote {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin: 22px 0 16px;
+  color: #FFFEFA;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(21px, 5vw, 26px);
+  line-height: 1.43;
+}
+
+#homeView .verse-note {
+  position: relative;
+  z-index: 1;
+  color: #C5D3C8;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* Prayer rhythm list */
+
+#homeView .section-heading {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+#homeView .section-heading .eyebrow {
+  color: #8A958B;
+}
+
+#homeView .prayer-list {
   display: grid;
   gap: 10px;
 }
 
-.prayer-row {
-  min-height: 72px;
+#homeView .prayer-row {
+  min-height: 73px;
   padding: 13px 14px;
-  gap: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--white);
+  box-shadow: 0 3px 12px rgba(21,44,38,.025);
+  transition: transform .18s ease, border-color .18s ease;
 }
 
-.prayer-icon {
-  background: var(--sage2);
-  color: var(--terracotta-dark);
+#homeView .prayer-row:active {
+  transform: scale(.99);
 }
 
-.prayer-info strong {
-  color: var(--ink);
+#homeView .prayer-icon {
+  width: 39px;
+  height: 39px;
+  border: 1px solid #DCE7DC;
+  border-radius: 12px;
+  background: var(--sage-light);
+  color: var(--forest-mid);
+}
+
+#homeView .prayer-info strong {
+  color: var(--forest);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 700;
 }
 
-.prayer-info small {
+#homeView .prayer-info small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
 }
 
-.check-button {
-  min-height: 38px;
+#homeView .check-button {
+  min-height: 37px;
   padding: 8px 12px;
   border: 1px solid #E8D3C6;
   border-radius: 999px;
   background: #FBF2EC;
   color: var(--terracotta-dark);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 750;
 }
 
-.check-button.done {
-  border-color: #D5E3D6;
-  background: var(--sage2);
-  color: var(--forest2);
+#homeView .check-button.done {
+  border-color: #D3E2D4;
+  background: var(--sage-light);
+  color: var(--forest-mid);
 }
 
-/* DAILY PROGRESS */
+/* Daily progress panel */
 
-.daily-progress {
-  margin-top: 24px;
-  padding: 18px;
-  border: 1px solid var(--line);
+#homeView .daily-progress {
+  margin: 24px 0 17px;
+  padding: 19px;
+  border: 1px solid #D9E4D8;
   border-radius: var(--radius-lg);
-  background: var(--sage2);
+  background: linear-gradient(135deg, #EFF4ED, #E4EDE2);
 }
 
-.progress-copy {
+#homeView .progress-copy {
   color: var(--forest);
   font-size: 12px;
 }
 
-.progress-track {
-  height: 7px;
-  margin: 12px 0;
-  border-radius: 999px;
-  background: #DCE5DC;
-  overflow: hidden;
+#homeView .progress-copy strong {
+  font-size: 11px;
 }
 
-.progress-track span {
+#homeView .progress-track {
+  height: 7px;
+  margin: 13px 0 10px;
+  border-radius: 999px;
+  background: #D3DFD2;
+}
+
+#homeView .progress-track span {
   border-radius: inherit;
   background: var(--terracotta);
 }
 
-.daily-progress > p {
+#homeView .daily-progress > p {
+  color: #718074;
+  font-size: 10px;
+}
+
+/* =========================================================
+   PRAYER — QUIET, FOCUSED SESSION
+   ========================================================= */
+
+#prayerView .page-heading {
+  margin-bottom: 25px;
+}
+
+#prayerView .page-heading .eyebrow {
+  color: var(--terracotta-dark);
+}
+
+#prayerView .session-card {
+  position: relative;
+  overflow: hidden;
+  padding: 32px 22px 25px;
+  border: 1px solid #E9D9CE;
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 50% 0%, #FFF9F2, transparent 54%),
+    linear-gradient(180deg, #FBF5EF, #F7F1E9);
+  box-shadow: 0 12px 32px rgba(121,79,56,.07);
+}
+
+#prayerView .session-card::before {
+  content: "";
+  position: absolute;
+  top: -94px;
+  left: 50%;
+  width: 250px;
+  height: 250px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(196,122,90,.10);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+#prayerView .session-orbit {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 66px;
+  height: 66px;
+  place-items: center;
+  margin: 0 auto 20px;
+  border: 1px solid #E8D5C7;
+  border-radius: 50%;
+  background: #F5E8DE;
+  color: var(--terracotta-dark);
+  font-size: 27px;
+  box-shadow: 0 0 0 8px rgba(196,122,90,.055);
+}
+
+#prayerView .session-card .eyebrow {
+  color: var(--terracotta-dark);
+}
+
+#prayerView .session-card h2 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -.6px;
+  margin: 0 0 10px;
+}
+
+#prayerView .session-card > p:not(.eyebrow):not(.tiny-note) {
+  max-width: 340px;
+  color: #77766D;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+#prayerView .timer {
+  display: inline-block;
+  min-width: 190px;
+  margin: 25px 0;
+  padding: 13px 20px;
+  border-top: 1px solid #E8D9CF;
+  border-bottom: 1px solid #E8D9CF;
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(44px, 12vw, 57px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+#prayerView .session-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+#prayerView .session-actions button {
+  width: 100%;
+}
+
+#prayerView .tiny-note {
+  max-width: 340px;
+  margin: 17px auto 0;
+  color: #89857C;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+#prayerView .reflection-prompt {
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 17px;
+  padding: 19px;
+  border: 1px solid #DDE5DB;
+  border-radius: var(--radius-lg);
+  background: var(--sage-light);
+}
+
+#prayerView .reflection-prompt > span {
+  color: var(--terracotta-dark);
+  font-size: 21px;
+}
+
+#prayerView .reflection-prompt strong {
+  color: var(--forest);
+  font-size: 12px;
+}
+
+#prayerView .reflection-prompt p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+/* =========================================================
+   JOURNAL — WRITING SPACE
+   ========================================================= */
+
+#journalView .page-heading .eyebrow {
+  color: var(--rose-dark);
+}
+
+#journalView .page-heading h1 {
+  color: #59413F;
+}
+
+#journalView .journal-form {
+  display: grid;
+  gap: 9px;
+  padding: 21px;
+  border: 1px solid #E8DAD5;
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(145deg, #FFFDFC, #FBF5F2);
+  box-shadow: 0 8px 24px rgba(115,76,69,.045);
+}
+
+#journalView .journal-form label {
+  margin: 8px 0 1px;
+  color: #694D49;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#journalView .journal-form label span {
+  color: #9A8580;
+  font-weight: 400;
+}
+
+#journalView input,
+#journalView textarea {
+  border: 1px solid #E6DCD7 !important;
+  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  color: var(--ink) !important;
+  font-size: 13px;
+}
+
+#journalView textarea {
+  min-height: 155px;
+  line-height: 1.8;
+}
+
+#journalView input:focus,
+#journalView textarea:focus {
+  border-color: #C99A8D !important;
+  outline: 2px solid rgba(196,122,90,.13);
+}
+
+#journalView input::placeholder,
+#journalView textarea::placeholder {
+  color: #A99B96;
+}
+
+#journalView .journal-form-bottom {
+  align-items: center;
+  gap: 12px;
+  margin-top: 9px;
+}
+
+#journalView .journal-form-bottom > span {
+  color: #927E78;
+  font-size: 10px;
+}
+
+#journalView .privacy-note {
+  color: #927E78;
+  font-size: 10px;
+}
+
+#journalView .journal-heading {
+  margin-top: 32px;
+}
+
+#journalView .journal-heading .eyebrow {
+  color: var(--rose-dark);
+}
+
+#journalView .count-pill {
+  border: 1px solid #E8DAD5;
+  background: #F7ECE8;
+  color: #805B53;
+}
+
+#journalView .journal-entries {
+  display: grid;
+  gap: 11px;
+}
+
+#journalView .entry-card {
+  padding: 17px;
+  border: 1px solid #E8DAD5;
+  border-radius: var(--radius-md);
+  background: #FFFEFC;
+  box-shadow: 0 3px 12px rgba(115,76,69,.025);
+}
+
+#journalView .entry-card h3 {
+  color: #59413F;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+#journalView .entry-date {
+  color: #9A8580;
+  font-size: 10px;
+}
+
+#journalView .entry-body {
+  color: #4F4A46;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+#journalView .delete-entry {
+  color: var(--danger);
+}
+
+/* =========================================================
+   JOURNEY — PROGRESS WITHOUT GAMIFICATION OVERLOAD
+   ========================================================= */
+
+#historyView .page-heading .eyebrow {
+  color: #738A76;
+}
+
+#historyView .stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+  margin-bottom: 17px;
+}
+
+#historyView .stat-card {
+  display: grid;
+  gap: 7px;
+  min-height: 145px;
+  padding: 19px;
+  border: 1px solid #D8E4D8;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, #EAF1E8, #DCE8DC);
+}
+
+#historyView .stat-card:nth-child(2) {
+  border-color: #E9D9CE;
+  background: linear-gradient(145deg, #FBF1E9, #F3E5D9);
+}
+
+#historyView .stat-card span,
+#historyView .stat-card small {
+  color: #65776A;
+  font-size: 10px;
+}
+
+#historyView .stat-card:nth-child(2) span,
+#historyView .stat-card:nth-child(2) small {
+  color: #8D7164;
+}
+
+#historyView .stat-card strong {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 39px;
+  font-weight: 400;
+  line-height: 1;
+  margin: 7px 0;
+}
+
+#historyView .history-card {
+  margin: 0 0 17px;
+  padding: 21px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+}
+
+#historyView .history-card h2 {
+  margin-bottom: 5px;
+}
+
+#historyView .week-bars {
+  min-height: 135px;
+  gap: 10px;
+  padding-top: 18px;
+}
+
+#historyView .week-day i {
+  max-width: 34px;
+  border-radius: 8px 8px 3px 3px;
+  background: #9FB69F;
+}
+
+#historyView .week-day small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+#historyView .tiny-note {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+#historyView #exportData {
+  border-color: #D9E3D8;
+  background: var(--sage-light);
+}
+
+/* =========================================================
+   SETTINGS — CLEAR GROUPS AND ACTION HIERARCHY
+   ========================================================= */
+
+#settingsView .page-heading .eyebrow {
+  color: #9B805B;
+}
+
+#settingsView .settings-card {
+  margin-bottom: 14px;
+  padding: 21px;
+  border: 1px solid #E6DFD1;
+  border-radius: var(--radius-lg);
+  background: #FFFEFB;
+  box-shadow: 0 5px 18px rgba(91,75,48,.035);
+}
+
+#settingsView .settings-card .section-heading {
+  margin: 0 0 15px;
+}
+
+#settingsView .settings-card .eyebrow {
+  color: #9B805B;
+}
+
+#settingsView .settings-card h2 {
+  color: var(--forest);
+  font-size: 22px;
+}
+
+#settingsView .schedule-setting {
+  min-height: 54px;
+  border-bottom: 1px solid #EAE5DB;
+}
+
+#settingsView .schedule-setting strong {
+  color: var(--forest);
+  font-size: 12px;
+}
+
+#settingsView .schedule-setting time {
   color: var(--muted);
   font-size: 11px;
 }
 
-/* BUTTONS */
+#settingsView .schedule-setting button {
+  color: #947C5A;
+}
+
+#settingsView .settings-card .subtle {
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+#settingsView .settings-card > .wide {
+  margin-top: 10px;
+}
+
+#settingsView .settings-card .tiny-note {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+#settingsView .version-note {
+  color: #9B927F;
+  font-size: 9px;
+  letter-spacing: .15em;
+}
+
+/* =========================================================
+   MORE — SIMPLE DESTINATION SCREEN
+   ========================================================= */
+
+#moreView .page-heading .eyebrow {
+  color: #9B805B;
+}
+
+#moreView .settings-card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 13px;
+  padding: 22px;
+  border: 1px solid #E7DFD0;
+  border-radius: var(--radius-lg);
+  background: #FFFEFB;
+  box-shadow: 0 5px 18px rgba(91,75,48,.035);
+}
+
+#moreView .settings-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--gold);
+}
+
+#moreView .settings-card .eyebrow {
+  color: #9B805B;
+}
+
+#moreView .settings-card h2 {
+  margin: 2px 0 9px;
+  color: var(--forest);
+  font-size: 23px;
+}
+
+#moreView .settings-card .subtle {
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+
+/* =========================================================
+   PERSONAL RECORDS — REQUESTS AND PROPHETIC WORDS
+   This view is inserted by records.js.
+   ========================================================= */
+
+#recordsView .records-heading {
+  margin: 8px 0 24px;
+  padding: 0 1px;
+}
+
+#recordsView .records-heading .eyebrow {
+  color: #738A76;
+}
+
+#recordsView .records-heading h1 {
+  margin: 0 0 9px;
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(32px, 8vw, 40px);
+  font-weight: 400;
+  letter-spacing: -1px;
+}
+
+#recordsView .records-heading .subtle {
+  max-width: 430px;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+/* Tabs */
+
+#recordsView .records-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 5px;
+  border: 1px solid #DCE5DC;
+  border-radius: 14px;
+  background: #EAF0E8;
+}
+
+#recordsView .records-tab {
+  min-height: 44px;
+  padding: 9px 7px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #718075;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#recordsView .records-tab.active {
+  background: var(--forest);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(21,44,38,.14);
+}
+
+/* Record entry panels */
+
+#recordsView .records-panel > .settings-card {
+  margin-bottom: 20px;
+  padding: 21px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+}
+
+#recordsView .records-panel .eyebrow {
+  color: var(--terracotta-dark);
+}
+
+#recordsView .records-panel h2 {
+  margin: 0 0 12px;
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  font-weight: 400;
+}
+
+#recordsView .records-form {
+  display: grid;
+  gap: 9px;
+}
+
+#recordsView .records-form label {
+  margin: 8px 0 1px;
+  color: var(--forest);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#recordsView .records-form input,
+#recordsView .records-form textarea,
+#recordsView .records-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid var(--line) !important;
+  border-radius: 10px !important;
+  background: #FFFEFC !important;
+  color: var(--ink) !important;
+  font: inherit;
+  font-size: 12px;
+}
+
+#recordsView .records-form textarea {
+  line-height: 1.7;
+}
+
+#recordsView .records-form input:focus,
+#recordsView .records-form textarea:focus,
+#recordsView .records-form select:focus {
+  border-color: var(--terracotta) !important;
+  outline: 2px solid rgba(196,122,90,.15);
+}
+
+#recordsView .records-form button {
+  margin-top: 10px;
+}
+
+#recordsView .records-guidance {
+  margin: 0 0 13px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+/* Lists and record cards */
+
+#recordsView .records-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 26px 0 13px;
+}
+
+#recordsView .records-list-heading h2 {
+  margin: 0;
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 400;
+}
+
+#recordsView .records-list {
+  display: grid;
+  gap: 12px;
+}
+
+#recordsView .record-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: 0 5px 17px rgba(21,44,38,.035);
+}
+
+#recordsView .record-card-top {
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+#recordsView .record-category {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #F8EEE8;
+  color: var(--terracotta-dark);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+#recordsView .record-date {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+#recordsView .record-card h3 {
+  margin: 0 0 9px;
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+#recordsView .record-card > p {
+  color: #505C54;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+#recordsView .record-card blockquote {
+  margin: 0 0 13px;
+  padding: 14px 15px;
+  border-left: 3px solid var(--terracotta);
+  border-radius: 0 10px 10px 0;
+  background: #F8F5EF;
+  color: #39483F;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+#recordsView .record-reflection {
+  padding: 13px;
+  border: 1px solid #DDE7DC;
+  border-radius: 11px;
+  background: var(--sage-light);
+  color: var(--forest);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+#recordsView .record-reflection p {
+  margin: 6px 0 0;
+  color: #56655A;
+}
+
+#recordsView .record-status-line {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+#recordsView .record-status-line strong {
+  color: var(--forest);
+  font-size: 11px;
+}
+
+#recordsView .record-actions {
+  gap: 7px;
+  margin-top: 13px;
+}
+
+#recordsView .record-action,
+#recordsView .record-delete {
+  min-height: 39px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+#recordsView .record-action {
+  border: 1px solid var(--line);
+  background: #FBFCFA;
+  color: var(--forest);
+}
+
+#recordsView .record-action-primary {
+  border-color: var(--terracotta);
+  background: var(--terracotta);
+  color: var(--white);
+}
+
+#recordsView .record-delete {
+  border: 1px solid #E9D1CC;
+  background: #FBF0EE;
+  color: var(--danger);
+}
+
+/* General journal link and export area */
+
+#recordsView .records-journal-link {
+  display: grid;
+  gap: 10px;
+  margin-top: 26px;
+  padding: 20px;
+  border: 1px solid #D9E5D8;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, #EDF3EA, #E2EBE0);
+}
+
+#recordsView .records-journal-link h2 {
+  color: var(--forest);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+#recordsView .records-journal-link p {
+  color: #69786D;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+#recordsView .records-journal-link button {
+  justify-self: start;
+}
+
+#recordsView .records-footer {
+  margin-top: 18px;
+}
+
+#recordsView .records-footer .tiny-note {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+#recordsView .records-status {
+  min-height: 18px;
+  color: var(--forest-mid);
+  font-size: 11px;
+}
+
+#recordsView .records-status.is-error {
+  color: var(--danger);
+}
+
+#moreView .records-shortcut {
+  margin-top: 14px;
+}
+
+/* =========================================================
+   SHARED BUTTONS / INPUTS / MODALS
+   ========================================================= */
 
 .primary-button,
 .secondary-button,
 .danger-button {
-  min-height: 48px;
-  padding: 12px 18px;
-  border-radius: var(--radius-md);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  min-height: 47px;
+  padding: 12px 17px;
+  border-radius: 11px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 750;
   letter-spacing: .005em;
-  cursor: pointer;
+  transition: transform .16s ease, background .16s ease;
   touch-action: manipulation;
-  transition: background-color .18s ease,
-    border-color .18s ease,
-    transform .18s ease;
 }
 
-/* Primary actions use terracotta */
 .primary-button {
   border: 1px solid var(--terracotta);
   background: var(--terracotta);
   color: var(--white);
-  box-shadow: 0 5px 13px rgba(163,95,69,.13);
-}
-
-.primary-button:hover,
-.primary-button:focus-visible {
-  border-color: var(--terracotta-dark);
-  background: var(--terracotta-dark);
-}
-
-.secondary-button {
-  border: 1px solid var(--line);
-  background: var(--white);
-  color: var(--forest);
-}
-
-.secondary-button:hover,
-.secondary-button:focus-visible {
-  border-color: #B9C9BC;
-  background: var(--sage2);
-}
-
-.danger-button {
-  border: 1px solid #E7C9C4;
-  background: #FBF0EE;
-  color: var(--danger);
+  box-shadow: 0 5px 13px rgba(163,95,69,.14);
 }
 
 .primary-button:active,
@@ -378,337 +1249,42 @@ main {
   transform: translateY(1px);
 }
 
+.secondary-button {
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--forest);
+}
+
+.danger-button {
+  border: 1px solid #E7C9C4;
+  background: #FBF0EE;
+  color: var(--danger);
+}
+
 .wide {
   width: 100%;
 }
 
 #quickJournal {
-  margin-top: 18px;
-}
-
-/* PRAYER SESSION */
-
-.session-card {
-  padding: 28px 22px 24px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  background: var(--paper);
-  text-align: center;
-  box-shadow: none;
-}
-
-.session-orbit {
-  background: var(--sage);
-  color: var(--terracotta-dark);
-  border: 1px solid #D7E2D8;
-}
-
-.session-card h2 {
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 29px;
-  font-weight: 400;
-}
-
-.session-card > p:not(.eyebrow):not(.tiny-note) {
-  max-width: 390px;
-  margin-inline: auto;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.timer {
-  margin: 24px 0;
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(42px,11vw,54px);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 2px;
-}
-
-.session-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.session-actions button {
-  width: 100%;
-}
-
-.tiny-note {
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.65;
-}
-
-.reflection-prompt {
-  display: flex;
-  gap: 13px;
-  margin-top: 16px;
-  padding: 17px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--sage2);
-}
-
-.reflection-prompt > span {
-  color: var(--terracotta-dark);
-}
-
-.reflection-prompt strong {
-  color: var(--forest);
-  font-size: 12px;
-}
-
-.reflection-prompt p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-/* JOURNAL, FORMS AND INPUTS */
-
-.journal-form,
-.settings-card,
-.history-card,
-.stat-card {
-  padding: 19px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--white);
-  box-shadow: none;
-}
-
-.journal-form {
-  display: grid;
-  gap: 9px;
-}
-
-.journal-form label,
-.records-form label,
-.modal label {
-  margin-top: 7px;
-  color: var(--forest);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.journal-form label span {
-  color: var(--muted);
-  font-weight: 400;
+  min-height: 51px;
+  margin-top: 8px;
 }
 
 input,
 textarea,
 select {
-  width: 100%;
-  min-width: 0;
-  padding: 12px 13px;
-  border: 1px solid var(--line) !important;
-  border-radius: 10px !important;
-  background: var(--white) !important;
-  color: var(--ink) !important;
-  font: inherit;
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: inherit;
 }
-
-textarea {
-  resize: vertical;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: #929B94;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid rgba(196,122,90,.25);
-  outline-offset: 1px;
-  border-color: var(--terracotta) !important;
-}
-
-label {
-  color: var(--forest);
-}
-
-.journal-form-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 7px;
-}
-
-.journal-form-bottom > span,
-.privacy-note {
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.privacy-note {
-  margin-top: 3px;
-}
-
-.journal-heading {
-  margin-top: 30px;
-}
-
-.count-pill {
-  padding: 5px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--sage2);
-  color: var(--forest2);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.journal-entries {
-  display: grid;
-  gap: 11px;
-}
-
-.entry-card {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--white);
-}
-
-.entry-card h3 {
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
-  font-weight: 400;
-}
-
-.entry-body {
-  color: var(--ink);
-  font-size: 12px;
-  line-height: 1.75;
-  overflow-wrap: anywhere;
-}
-
-.delete-entry {
-  border: 1px solid #E7C9C4;
-  border-radius: 999px;
-  background: #FBF0EE;
-  color: var(--danger);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* PROGRESS AND SETTINGS */
-
-.stats-grid {
-  gap: 12px;
-}
-
-.stat-card {
-  display: grid;
-  gap: 6px;
-}
-
-.stat-card span,
-.stat-card small {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.stat-card strong {
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 32px;
-  font-weight: 400;
-}
-
-.history-card {
-  margin-top: 16px;
-}
-
-.week-bars {
-  gap: 9px;
-}
-
-.week-day {
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.schedule-setting {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.settings-card + .settings-card {
-  margin-top: 14px;
-}
-
-.settings-card h2 {
-  margin: 4px 0 10px;
-}
-
-.settings-card > .wide {
-  margin-top: 10px;
-}
-
-.version-note {
-  margin: 24px 0 4px;
-  color: var(--muted);
-  font-size: 9px;
-  letter-spacing: .12em;
-  text-align: center;
-}
-
-/* BOTTOM NAVIGATION */
-
-.bottom-nav {
-  min-height: calc(74px + env(safe-area-inset-bottom));
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--line);
-  background: rgba(251,249,244,.98);
-  box-shadow: 0 -6px 22px rgba(21,44,38,.035);
-}
-
-.nav-item {
-  min-width: 0;
-  gap: 4px;
-  color: #89938C;
-}
-
-.nav-item span {
-  font-size: 21px;
-  line-height: 1.1;
-}
-
-.nav-item small {
-  font-size: 10px;
-  font-weight: 650;
-}
-
-.nav-item.selected,
-.nav-item.selected span {
-  color: var(--terracotta-dark);
-}
-
-/* MODALS AND FEEDBACK */
 
 .modal-backdrop {
   padding: 18px;
-  background: rgba(15,20,18,.42);
+  background: rgba(15,20,18,.48);
   backdrop-filter: blur(5px);
 }
 
 .modal {
-  width: min(100%,460px);
-  padding: 24px;
+  width: min(100%, 440px);
+  padding: 25px;
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
   background: var(--cream);
@@ -718,17 +1294,23 @@ label {
 .modal h2 {
   color: var(--forest);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 400;
 }
 
-.modal-close {
-  color: var(--muted);
+.modal label {
+  color: var(--forest);
+  font-size: 11px;
+}
+
+.modal input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
 }
 
 .modal-actions {
-  gap: 10px;
-  margin-top: 18px;
+  gap: 9px;
 }
 
 .modal-actions button {
@@ -743,259 +1325,117 @@ label {
   box-shadow: 0 10px 28px rgba(15,20,18,.18);
 }
 
-/* PERSONAL RECORDS */
+/* =========================================================
+   BOTTOM NAVIGATION
+   ========================================================= */
 
-.records-heading {
-  margin: 8px 0 22px;
+.bottom-nav {
+  min-height: calc(76px + env(safe-area-inset-bottom));
+  padding: 8px 9px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: rgba(255,254,250,.97);
+  box-shadow: 0 -7px 24px rgba(21,44,38,.045);
+  backdrop-filter: blur(16px);
 }
 
-.records-heading h1 {
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 34px;
-  font-weight: 400;
-  letter-spacing: -.8px;
+.nav-item {
+  min-width: 0;
+  color: #89958C;
+  gap: 4px;
 }
 
-.records-heading .subtle {
-  font-size: 13px;
-}
-
-.records-tabs {
-  gap: 6px;
-  padding: 5px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: var(--sage2);
-}
-
-.records-tab {
-  min-height: 42px;
-  border-radius: 9px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.records-tab.active {
-  background: var(--forest);
-  color: var(--white);
-  box-shadow: none;
-}
-
-.records-panel .settings-card {
-  padding: 19px;
-}
-
-.records-form {
-  gap: 9px;
-}
-
-.records-form label {
-  color: var(--forest);
-  font-size: 12px;
-}
-
-.records-form input,
-.records-form textarea,
-.records-form select {
-  padding: 12px 13px;
-  border: 1px solid var(--line);
+.nav-item span {
+  display: grid;
+  min-width: 43px;
+  min-height: 29px;
+  place-items: center;
   border-radius: 10px;
-  background: var(--white);
-  color: var(--ink);
-  font-size: 13px;
+  font-size: 21px;
+  line-height: 1;
+  transition: background .18s ease;
 }
 
-.records-form button {
-  margin-top: 12px;
+.nav-item small {
+  font-size: 9px;
+  font-weight: 650;
 }
 
-.records-guidance {
-  margin-bottom: 13px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.records-list-heading {
-  margin: 25px 0 12px;
-}
-
-.records-list-heading h2 {
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 400;
-}
-
-.records-list {
-  gap: 12px;
-}
-
-.record-card {
-  padding: 17px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--white);
-  box-shadow: none;
-}
-
-.record-category {
-  padding: 5px 9px;
-  background: #F8EEE8;
+.nav-item.selected {
   color: var(--terracotta-dark);
 }
 
-.record-card h3 {
-  color: var(--forest);
-  font-size: 17px;
-  font-weight: 400;
+.nav-item.selected span {
+  background: #F7EAE2;
+  color: var(--terracotta-dark);
 }
 
-.record-card > p {
-  color: var(--ink);
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.record-card blockquote {
-  border-left-color: var(--terracotta);
-  border-radius: 0 9px 9px 0;
-  background: var(--paper);
-  color: var(--ink);
-}
-
-.record-reflection {
-  background: var(--sage2);
-}
-
-.record-status-line {
-  border-top-color: var(--line);
-}
-
-.record-status-line strong {
-  color: var(--forest);
-}
-
-.record-action {
-  min-height: 40px;
-  border-color: var(--line);
-  background: var(--white);
-  color: var(--forest);
-  font-size: 10px;
-}
-
-.record-action-primary {
-  border-color: var(--terracotta);
-  background: var(--terracotta);
-  color: var(--white);
-}
-
-.record-delete {
-  border-color: #E7C9C4;
-  background: #FBF0EE;
-  color: var(--danger);
-}
-
-.records-journal-link {
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--sage2);
-}
-
-.records-journal-link h2 {
-  color: var(--forest);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 400;
-}
-
-.records-journal-link p {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.records-footer .tiny-note {
-  font-size: 10px;
-}
-
-.records-status {
-  color: var(--forest2);
-}
-
-.records-status.is-error {
-  color: var(--danger);
-}
-
-/* EMPTY, DISABLED AND ACCESSIBILITY STATES */
-
-.empty-state {
-  padding: 22px 18px;
-  border: 1px dashed #C9D5CA;
-  border-radius: var(--radius-md);
-  background: var(--sage2);
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.7;
-  text-align: center;
-}
-
-button:disabled {
-  opacity: .58;
-  cursor: not-allowed;
-}
-
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid rgba(196,122,90,.55);
-  outline-offset: 3px;
-}
-
-/* RESPONSIVE */
+/* =========================================================
+   RESPONSIVE / ACCESSIBILITY
+   ========================================================= */
 
 @media (max-width: 420px) {
   .top-actions {
     gap: 7px;
   }
 
-  .streak-badge {
-    padding-inline: 8px;
+  .date-label {
+    display: none;
   }
 
-  .session-actions {
+  #prayerView .session-actions {
     grid-template-columns: 1fr;
   }
 
-  .journal-form-bottom {
+  #journalView .journal-form-bottom {
     align-items: stretch;
   }
 
-  .journal-form-bottom .primary-button {
+  #journalView .journal-form-bottom .primary-button {
     width: 100%;
   }
 
-  .records-tabs {
+  #recordsView .records-tabs {
     grid-template-columns: 1fr 1fr;
+  }
+
+  #recordsView .record-actions {
+    align-items: stretch;
+  }
+
+  #recordsView .record-action,
+  #recordsView .record-delete {
+    flex: 1 1 auto;
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 360px) {
   main {
-    padding-inline: 18px;
+    padding-right: 16px;
+    padding-left: 16px;
   }
 
-  .topbar {
-    padding-inline: 18px;
+  #homeView .welcome {
+    margin-right: -16px;
+    margin-left: -16px;
+    padding-right: 18px;
+    padding-left: 18px;
   }
 
-  .date-label {
-    display: none;
+  #historyView .stat-card {
+    padding: 15px;
   }
 }
 
 @media (min-width: 700px) {
   .app-shell {
-    box-shadow: 0 0 50px rgba(21,44,38,.045);
+    box-shadow: 0 0 55px rgba(21,44,38,.045);
+  }
+
+  #homeView .welcome {
+    margin-right: -28px;
+    margin-left: -28px;
+    padding-right: 42px;
+    padding-left: 42px;
   }
 }
 
@@ -1008,4 +1448,18 @@ a:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgba(196,122,90,.55);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: .58;
+  cursor: not-allowed;
 }
