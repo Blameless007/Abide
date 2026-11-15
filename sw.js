@@ -1,4 +1,3 @@
-
 const CACHE = "abide-shell-v16";
 
 const ASSETS = [
@@ -19,105 +18,116 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE).then(cache =>
-      cache.addAll(
-        ASSETS.map(path =>
-          new Request(path, { cache: "reload" })
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+
+    await cache.addAll(
+      ASSETS.map(path => new Request(path, { cache: "reload" }))
+    );
+
+    // Wait for the app's safe-update process before activating.
+  })());
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    const names = await caches.keys();
+
+    await Promise.all(
+      names
+        .filter(name =>
+          name.startsWith("abide-shell-") && name !== CACHE
         )
-      )
-    )
-  );
+        .map(name => caches.delete(name))
+    );
+
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("message", event => {
-  if(event.data?.type==="ABIDE_SKIP_WAITING"){
+  if (event.data === "ABIDE_SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys =>
-        Promise.all(
-          keys
-            .filter(key =>
-              key.startsWith("abide-shell-") &&
-              key!==CACHE
-            )
-            .map(key=>caches.delete(key))
-        )
-      )
-      .then(()=>self.clients.claim())
-  );
+self.addEventListener("fetch", event => {
+  const request = event.request;
+
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+
+  if (url.origin !== self.location.origin) return;
+
+  // Always fetch fresh files for the app's update checker.
+  if (url.searchParams.has("abide-check")) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
+
+  event.respondWith((async () => {
+    try {
+      const response = await fetch(request);
+
+      if (response && response.ok) {
+        const cache = await caches.open(CACHE);
+        await cache.put(request, response.clone());
+      }
+
+      return response;
+
+    } catch (error) {
+      const cached = await caches.match(request, {
+        ignoreSearch: true
+      });
+
+      if (cached) return cached;
+
+      if (request.mode === "navigate") {
+        const home = await caches.match("./index.html");
+        if (home) return home;
+
+        const root = await caches.match("./");
+        if (root) return root;
+      }
+
+      return new Response(
+        "You are offline. This file is not available in the saved app cache.",
+        {
+          status: 503,
+          statusText: "Offline"
+        }
+      );
+    }
+  })());
 });
 
 self.addEventListener("notificationclick", event => {
   event.notification.close();
 
-  const prayerId=event.notification.data?.prayerId;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({
+      type: "window",
+      includeUncontrolled: true
+    });
 
-  event.waitUntil(
-    self.clients.matchAll({
-      type:"window",
-      includeUncontrolled:true
-    }).then(clientList=>{
-      for(const client of clientList){
-        if("focus" in client){
-          client.postMessage({
-            type:"ABIDE_OPEN_PRAYER",
-            prayerId
-          });
-
-          return client.focus();
-        }
+    for (const client of windows) {
+      if ("focus" in client) {
+        await client.focus();
+        client.postMessage({
+          type: "ABIDE_OPEN_PRAYER"
+        });
+        return;
       }
+    }
 
-      return self.clients.openWindow("./");
-    })
-  );
-});
+    const client = await self.clients.openWindow("./");
 
-self.addEventListener("fetch", event => {
-  const request=event.request;
-
-  if(request.method!=="GET")return;
-
-  const url=new URL(request.url);
-
-  if(url.origin!==self.location.origin)return;
-
-  if(url.searchParams.has("abide-check")){
-    event.respondWith(
-      fetch(request,{cache:"no-store"})
-    );
-    return;
-  }
-
-  event.respondWith(
-    fetch(request,{cache:"no-store"})
-      .then(response=>{
-        if(response.ok){
-          const copy=response.clone();
-
-          caches.open(CACHE).then(cache=>
-            cache.put(request,copy)
-          );
-        }
-
-        return response;
-      })
-      .catch(async()=>{
-        const cached=await caches.match(request);
-
-        if(cached)return cached;
-
-        if(request.mode==="navigate"){
-          return caches.match("./index.html");
-        }
-
-        return Response.error();
-      })
-  );
+    if (client) {
+      client.postMessage({
+        type: "ABIDE_OPEN_PRAYER"
+      });
+    }
+  })());
 });
